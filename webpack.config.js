@@ -6,8 +6,10 @@ module.exports = {
   devtool:"source-map",
   output: {
     filename: 'main.js',
-    path: path.resolve(__dirname)
+    path: path.resolve(__dirname, 'dist')
   },
+	plugins: [
+	],
 	module: {
 		rules: [
 			{

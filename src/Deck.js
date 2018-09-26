@@ -1,9 +1,8 @@
 import Card from './Card.js';
-import Chance from 'chance';
+import ShuffleArray from './utils/knuthShuffle.js';
 
 export default class Deck {
 	constructor () {
-		this.chance = new Chance();
 	}
 
 	static getCardSymbol (suit, rank) {
@@ -14,7 +13,7 @@ export default class Deck {
 	getCards () {
 		let htmlCards = [];
 		let cards = Object.keys(Deck.cards);
-		cards = this.chance.shuffle(cards);
+		cards = ShuffleArray.knuthShuffle(cards);
 
 		for( let i in cards ) {
 			let card = new Card(cards[i]);

@@ -26,7 +26,7 @@ export default class CardJquery extends Card {
 		let {suit, rank} = this;
 		let htmlTag = `<div class="card img" \
 			data-suit="${suit}" data-rank="${rank}" data-name="${this.getName()}" data-score="${this.getScore()}" >\
-				<img src="./src/decks/atlas/${this.filename()}"> \
+				<img src="./decks/atlas/${this.filename()}"> \
 			</div>`;
 		return $(htmlTag);
 	}

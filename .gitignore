@@ -75,5 +75,13 @@ typings/
 # Idea
 /.idea
 
+# Vscode
+/.vscode
+
+# External IDE & editors stuff
 /*.sublime-*
 /sftp-config.json
+*.code-workspace
+
+# Dev builds
+/dev
