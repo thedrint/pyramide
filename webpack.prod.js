@@ -1,24 +1,90 @@
 const path = require('path');
-const merge = require('webpack-merge');
-const common = require('./webpack.common.js');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin')
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+// const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
+// const SVGSpritemapPlugin = require('svg-spritemap-webpack-plugin');
 
+const wwwData = 'public';// Site dir on server (relative to this config)
 
-module.exports = merge(common, {
+module.exports = {
 	mode: "production",
+	output:
+	{
+		path: path.resolve(__dirname, wwwData),
+		filename: '[name].js',
+		publicPath: './',
+	},
+	optimization: {
+		minimizer: [
+			new OptimizeCSSAssetsPlugin({}),
+			new TerserPlugin({
+				extractComments: /^foo$/,
+			}),
+		],
+	},
 	plugins: [
-		new CopyWebpackPlugin([
-			{from:'./src/index.css', to: './index.css'}
+		new CleanWebpackPlugin([wwwData]),
+		CopyWebpackPlugin([
+			{from: './assets/img/decks', to: './assets/img/decks', context: './src'},
 		]),
-		new CleanWebpackPlugin(['prod']),
+		// new SpriteLoaderPlugin(),
+		// new SVGSpritemapPlugin({
+		// 	src: 'src/**/*.svg',
+		// 	svgo: {
+		// 		removeMetadata: true,
+		// 	},
+		// }),
+		new MiniCssExtractPlugin(),
 		new HtmlWebpackPlugin({
 			title: 'Pyramide Solitaire',
-			template: './src/index.html'
-		})
+			template: './src/index.html',
+		}),
 	],
-	output: {
-		path: path.resolve(__dirname, 'prod')
-	}
-});
+	module:
+	{
+		rules:
+		[
+			// {
+			// 	test: /\.svg$/,
+			// 	loader: 'svg-sprite-loader',
+			// 	options: {
+			// 		extract: true,
+			// 	}
+			// },
+			{
+				test: /\.(png|jpeg|jpg|gif)$/,
+				include: path.resolve(__dirname, './src/assets/img'),
+				use: [
+					{
+						loader: 'url-loader',
+						options: {
+							context: 'src', name:'[path][name].[ext]',
+							limit: 128,
+						}
+					},
+				],
+			},
+			{
+				test: /\.css$/,
+				include: path.resolve(__dirname, './src/assets/css'),
+				use: [
+					{
+						loader: MiniCssExtractPlugin.loader,
+						// options: {context: 'src', name:'[path][name].[ext]'},
+					},
+					{
+						loader: 'css-loader',
+						// options:{context: 'src', name:'[path][name].[ext]', sourceMap: false, minimize: true},
+					},
+					// {
+					// 	loader: 'style-loader',
+					// },
+				],
+			},
+		]
+	},
+};

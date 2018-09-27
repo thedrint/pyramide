@@ -1,4 +1,5 @@
 import Gui from './Gui.js';
+import $ from "jquery";
 
 export default class Pyramide {
 	constructor() {
@@ -168,9 +169,11 @@ export default class Pyramide {
 	}
 
 	play() {
-		this.initGui();
-		this.initDecks();
-		this.showDecks();
-		this.initHandlers();
+		$(() => {
+			this.initGui();
+			this.initDecks();
+			this.showDecks();
+			this.initHandlers();
+		});
 	}
 }

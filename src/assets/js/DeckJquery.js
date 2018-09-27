@@ -28,7 +28,7 @@ export default class DeckJquery extends Deck {
 
 	static shirtimg () {
 		let htmlTag = `<div class="card img shirt">\
-			<img src="./decks/atlas/Atlas_deck_card_back_blue_and_brown.svg"></div>`;
+			<img src="./assets/img/decks/atlas/Atlas_deck_card_back_blue_and_brown.svg"></div>`;
 		return $(htmlTag);
 	}
 	static shirtsymbol () {
