@@ -75,6 +75,7 @@ export default class GuiJquery {
 		let {game} = this;
 		let $game = $(this.q.game);
 		let $field = $game.find(this.q.field);
+		$field.empty();
 		let $dealer = $game.find(this.q.dealer);
 		// Fill field with cards in rows
 		for (let row in game.field) {
@@ -91,13 +92,14 @@ export default class GuiJquery {
 		}
 
 		let cardWidth = $(this.q.card).width();
+		let cardHeight = cardWidth*1.5;
 
 		// Correct position of cards and rows
 		$field.find(this.q.cardRow).each( (row, el) => {
 			let $cardRow = $(el);
 			let zIndex = parseInt(row) + 1;
 			$cardRow.css('z-index', zIndex);
-			$cardRow.css('top', `${row*80}px`);
+			$cardRow.css('top', `${row*cardHeight/2}px`);
 
 			let rowWidth = cardWidth * game.field[row].length;
 			let rowLeftPos = parseInt(($field.width() - rowWidth) / 2);

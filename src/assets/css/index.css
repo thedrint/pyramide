@@ -4,7 +4,7 @@ html, body {
 }
 
 :root {
-    --cardWidth: 8vw;
+    --cardWidth: calc(12vh * 0.66 * 2);
 }
 
 .game {
