@@ -15,6 +15,7 @@ export default class Pyramide {
 
 		this.drop = [];
 
+		this.scores = 0;
 	}
 
 	initGui (type = 'jquery') {
@@ -95,6 +96,8 @@ export default class Pyramide {
 			this.slot.pop();
 		// Add card to drop
 		this.drop.push({card: card, from: from});
+		this.scores += card.score;
+		this.gui.changeScoreboard(this.scores);
 	}
 
 	fitCard (card, from) {
@@ -143,6 +146,19 @@ export default class Pyramide {
 			});
 		}
 
+		// If fit card in field not found - search in slot
+		if( from.where === 'field' && result.card === undefined ) {
+			// get card from slot for checking
+			let slotCard = this.slot.pop();
+			if( (slotCard !== undefined) && ( (slotCard.score + card.score) === 13 ) ) {
+				result.card = slotCard;
+				result.from = {where: 'slot'};
+				console.log('Found fittest card in slot');
+			}
+			// Return card to slot after checking
+			this.slot.push(slotCard);
+		}
+
 		return result;
 	}
 
@@ -175,5 +191,10 @@ export default class Pyramide {
 			this.showDecks();
 			this.initHandlers();
 		});
+	}
+
+	static playGame () {
+		let game = new Pyramide();
+		game.play();
 	}
 }

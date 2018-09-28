@@ -17,6 +17,8 @@ export default class GuiJquery {
 			cardRow: 'cardrow',
 			cardRowWrapper: 'cardrow-wrapper',
 			game: 'game',
+			scoreboard: 'scoreboard',
+			scoreboardText: 'scoreboard-text',
 		};
 
 		this.q = {};
@@ -114,6 +116,7 @@ export default class GuiJquery {
 
 		// Show Ddeck shirt
 		this.showDealerDeckShirt();
+		this.changeScoreboard('0');
 	}
 
 	showDealerDeckShirt() {
@@ -162,5 +165,10 @@ export default class GuiJquery {
 				game.slot.push(slotCard);
 			}
 		}
+	}
+
+	changeScoreboard (newScores) {
+		let $scoreboard = $(this.q.scoreboardText);
+		$scoreboard.text(newScores);
 	}
 }

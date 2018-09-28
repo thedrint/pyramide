@@ -34,6 +34,23 @@ html, body {
     border-radius: 0.5rem;
 }
 
+.scoreboard {
+    position:absolute;
+    right:0;
+    top:0;
+}
+
+.scoreboard-text {
+    position:relative;
+    width:6rem;
+    text-align: center;
+    border: 3px white solid;
+    border-radius: 0.5rem;
+    font-size:400%;
+    padding:1rem;
+    color:black;
+}
+
 .cardrow {
     position: absolute;
 }
