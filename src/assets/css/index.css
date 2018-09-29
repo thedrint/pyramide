@@ -5,7 +5,7 @@ html, body {
 
 :root {
     /* 100vh / 4 - card target height, *0.66 - card width/height relation */
-    --cardWidth: calc(100vh / 4 * 0.60);
+    --cardWidth: calc(100vmin / 4 * 0.60);
 }
 
 .game {
@@ -22,9 +22,9 @@ html, body {
 
 .buttons {
     position:absolute;
-    top:8rem;
+    top: calc( var(--cardWidth) + 2vmin );
     right:0;
-    width:8rem;
+    min-width: var(--cardWidth);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -34,11 +34,11 @@ html, body {
 
 .button {
     display: block;
-    margin:0.5rem 0;
+    margin:1vmin 0;
     box-sizing: border-box;
     cursor: pointer;
-    height:10vh;
-    width:10vh;
+    height:10vmin;
+    width:10vmin;
     background-size: contain;
 }
 .button.newgame {
@@ -64,25 +64,31 @@ html, body {
 
 .dealer-deck {
     border: 3px solid white;
-    border-radius: 0.5rem;
+    border-radius: 1vmin;
 }
 
 .scoreboard {
     position:absolute;
+    width: var(--cardWidth);
+    height: var(--cardWidth);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     right:0;
     top:0;
+    box-sizing: border-box;
+    border: 3px white solid;
+    border-radius: 1vmin;
 }
 
 .scoreboard-text {
-    position:relative;
-    width:8rem;
+    display:block;
     text-align: center;
-    border: 3px white solid;
-    border-radius: 0.5rem;
-    font-size:5rem;
-    padding:1rem;
-    color:black;
-    box-sizing: border-box;
+    color:white;
+    font-size: calc(var(--cardWidth) * 0.6);
+    line-height: var(--cardWidth);
+    font-weight: bold;
+    vertical-align: middle;
 }
 
 .cardrow {
@@ -100,10 +106,10 @@ html, body {
     /*position: relative;*/
     display: inline-block;
     margin: 0;
-    padding: 0.2rem;
+    padding: 0.2vmin;
     /*font-size: 800%;*/
     line-height: 100%;
-    border-radius: 0.5rem;
+    border-radius: 1vmin;
     background: transparent;
     outline: transparent;
 }

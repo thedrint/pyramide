@@ -205,6 +205,6 @@ export default class GuiJquery {
 
 	changeScoreboard (newScores) {
 		let $scoreboard = $(this.q.scoreboardText);
-		$scoreboard.text(newScores);
+		$scoreboard.text(newScores.toString().padStart(3, '0'));
 	}
 }

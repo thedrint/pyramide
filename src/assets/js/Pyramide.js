@@ -117,6 +117,25 @@ export default class Pyramide {
 		this.drop.push({card: card, from: from});
 		this.scores += card.score;
 		this.gui.changeScoreboard(this.scores);
+
+		// Check game win
+		if( this.isFieldDeckEmpty() ) {
+			alert(`You win a game with ${this.scores} scores!`);
+			//TODO: Win animation and popup
+			//TODO: User can choose next action from popup: New game, restart game, show leaderboard and etc.
+		}
+	}
+
+	isFieldDeckEmpty () {
+		let emptyCardCnt = 0;
+		for (let row = 0; row < this.field.length; row++) {
+			for (let card of this.field[row]) {
+				if (card === undefined)
+					emptyCardCnt++;
+			}
+		}
+
+		return ( emptyCardCnt === 28 );
 	}
 
 	fitCard (card, from) {
