@@ -19,6 +19,9 @@ export default class GuiJquery {
 			game: 'game',
 			scoreboard: 'scoreboard',
 			scoreboardText: 'scoreboard-text',
+			button: 'button',
+			buttonNewGame: 'newgame',
+			buttonRestartGame: 'restartgame',
 		};
 
 		this.q = {};
@@ -27,11 +30,44 @@ export default class GuiJquery {
 		}
 	}
 
+	resetGui () {
+		this.showDealerDeckShirt();
+		this.showEmptySlot();
+		this.changeScoreboard('0');
+	}
+
+	initButtonHandlers () {
+		let {game} = this;
+		$(document).off('click', this.q.button).on(`click`, this.q.button, event => {
+			let $t = $(event.currentTarget);
+
+			//TODO: Settings and other buttons
+			if( $t.hasClass('todoinfuture') ) {
+				return true;
+			}
+
+			// Start new game and restart current game buttons
+			if( $t.hasClass(this.css.buttonRestartGame) || $t.hasClass(this.css.buttonNewGame) ) {
+				let savedDeck = undefined;
+
+				if( $t.hasClass(this.css.buttonRestartGame) ) {
+					let autosave = game.loadGame();
+					if( autosave ) {
+						savedDeck = autosave.deck.slice(0);
+					}
+				}
+
+				game.startGame(savedDeck);
+				return true;
+			}
+		});
+	}
+
 	initHandlers() {
 
 		let {game} = this;
 		// Any card clicked
-		$(document).on(`click`, this.q.card, event => {
+		$(document).off(`click`, this.q.card).on(`click`, this.q.card, event => {
 			let $t = $(event.currentTarget);
 			let data = $t.data();
 			if( $t.hasClass(this.css.shirt) )
@@ -66,7 +102,7 @@ export default class GuiJquery {
 		});
 
 		// Ddeck clicked
-		$(document).on(`click`, this.q.ddeck, event => {
+		$(document).off(`click`, this.q.ddeck).on(`click`, this.q.ddeck, event => {
 			game.getCardFromDealer();
 		});
 

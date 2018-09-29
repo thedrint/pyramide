@@ -13,15 +13,19 @@ export default class DeckJquery extends Deck {
 		return Deck.cards[cardKey];
 	}
 
-	getCards () {
+	getCards (deckArray = undefined) {
 		let htmlCards = [];
-		let cards = Object.keys(DeckJquery.cards);
-		cards = ShuffleArray.knuthShuffle(cards);
-
-		for( let i in cards ) {
-			let card = new CardJquery(cards[i]);
-			htmlCards.push(card);
+		let cards = [];
+		if( deckArray === undefined ) {
+			cards = Object.keys(Deck.cards);
+			cards = ShuffleArray.knuthShuffle(cards);
 		}
+		else {
+			cards = deckArray.slice(0);
+		}
+
+		for( const cardname of cards )
+			htmlCards.push(new CardJquery(cardname));
 
 		return htmlCards;
 	}

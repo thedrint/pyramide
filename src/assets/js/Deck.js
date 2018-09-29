@@ -1,5 +1,6 @@
 import Card from './Card.js';
 import ShuffleArray from './utils/knuthShuffle.js';
+import CardJquery from "./CardJquery";
 
 export default class Deck {
 	constructor () {
@@ -10,17 +11,28 @@ export default class Deck {
 		return Deck.cards[cardKey];
 	}
 
-	getCards () {
+	getCards (deckArray = undefined) {
 		let htmlCards = [];
-		let cards = Object.keys(Deck.cards);
-		cards = ShuffleArray.knuthShuffle(cards);
-
-		for( let i in cards ) {
-			let card = new Card(cards[i]);
-			htmlCards.push(card);
+		let cards = [];
+		if( deckArray === undefined ) {
+			cards = Object.keys(Deck.cards);
+			cards = ShuffleArray.knuthShuffle(cards);
 		}
+		else
+			cards = deckArray.slice(0);
+
+		for( const cardname of cards )
+			htmlCards.push(new Card(cardname));
 
 		return htmlCards;
+	}
+
+	getCardsNamesArray (deck) {
+		let deckArray = [];
+		for( let card of deck )
+			deckArray.push(card.getName());
+
+		return deckArray;
 	}
 }
 

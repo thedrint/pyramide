@@ -33,7 +33,7 @@ module.exports = {
 			rules:
 				[
 					{
-						test: /\.(png|jpe?g|gif)$/,
+						test: /\.(png|jpe?g|gif|svg)$/,
 						include: path.resolve(__dirname, './src/assets/img'),
 						use: [
 							{

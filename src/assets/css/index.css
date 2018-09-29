@@ -4,7 +4,8 @@ html, body {
 }
 
 :root {
-    --cardWidth: calc(12vh * 0.66 * 2);
+    /* 100vh / 4 - card target height, *0.66 - card width/height relation */
+    --cardWidth: calc(100vh / 4 * 0.60);
 }
 
 .game {
@@ -16,9 +17,41 @@ html, body {
 }
 
 .field {
+    height: calc(100vh);
+}
+
+.buttons {
+    position:absolute;
+    top:8rem;
+    right:0;
+    width:8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.button {
+    display: block;
+    margin:0.5rem 0;
+    box-sizing: border-box;
+    cursor: pointer;
+    height:10vh;
+    width:10vh;
+    background-size: contain;
+}
+.button.newgame {
+    background: url('./../img/start-game.svg') center center;
+}
+.button.restartgame {
+    background: url('./../img/restart-game.svg') center center;
 }
 
 .dealer {
+    position: absolute;
+    top:0;
+    left:0;
 }
 
 .dealer-deck,
@@ -42,13 +75,14 @@ html, body {
 
 .scoreboard-text {
     position:relative;
-    width:6rem;
+    width:8rem;
     text-align: center;
     border: 3px white solid;
     border-radius: 0.5rem;
-    font-size:400%;
+    font-size:5rem;
     padding:1rem;
     color:black;
+    box-sizing: border-box;
 }
 
 .cardrow {

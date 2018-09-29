@@ -3,6 +3,7 @@ import $ from "jquery";
 
 export default class Pyramide {
 	constructor() {
+		this.storage = localStorage;
 		this.gui = undefined;
 		this.deck = undefined;
 		this.cardRegistry = {};
@@ -23,10 +24,24 @@ export default class Pyramide {
 		this.deck = this.gui.deck;
 	}
 
-	initDecks() {
-		let htmlDeck = this.deck.getCards();
-		for( let i in htmlDeck ) {
-			let card = htmlDeck[i];
+	resetGui () {
+		this.gui.resetGui();
+	}
+
+	initDecks(savedDeck = undefined) {
+		// get card deck, new random, or predefined from saveDeck
+		let htmlDeck = this.deck.getCards(savedDeck);
+		// save it to storage
+		this.saveGame({deck:this.deck.getCardsNamesArray(htmlDeck)});
+		// Reset cardRegistry
+		this.cardRegistry = {};
+		this.field = [];
+		this.dealer = [];
+		this.slot = [];
+		this.currentRewind = 0;
+		this.drop = [];
+		this.scores = 0;
+		for( let card of htmlDeck ) {
 			this.cardRegistry[ card.getName() ] = card;
 		}
 		let row = 0;
@@ -51,8 +66,12 @@ export default class Pyramide {
 		this.gui.showDecks();
 	}
 
-	initHandlers() {
+	initHandlers () {
 		this.gui.initHandlers();
+	}
+
+	initButtonHandlers() {
+		this.gui.initButtonHandlers();
 	}
 
 	getCardFromDealer() {
@@ -139,7 +158,7 @@ export default class Pyramide {
 					if( !this.isCardOpened({where:'field', row, index: i}) )
 						return;
 
-					console.log('Found fittest card', row, i);
+					// console.log('Found fittest card', row, i);
 					result.card = curCard;
 					result.from = {where: 'field', row, index: i};
 				}
@@ -153,7 +172,7 @@ export default class Pyramide {
 			if( (slotCard !== undefined) && ( (slotCard.score + card.score) === 13 ) ) {
 				result.card = slotCard;
 				result.from = {where: 'slot'};
-				console.log('Found fittest card in slot');
+				// console.log('Found fittest card in slot');
 			}
 			// Return card to slot after checking
 			this.slot.push(slotCard);
@@ -163,10 +182,10 @@ export default class Pyramide {
 	}
 
 	isCardOpened (from) {
-		console.log('isCardOpened', from);
+		// console.log('isCardOpened', from);
 		// Slot card always opened
 		if( from.where === 'slot' ) {
-			console.log('Slot card is opened');
+			// console.log('Slot card is opened');
 			return true;
 		}
 
@@ -178,23 +197,41 @@ export default class Pyramide {
 				(this.field[from.row+1] !== undefined && this.field[from.row+1][from.index+1] !== undefined)
 			);
 
-			console.log('Card ' + (hasNextRowNeighbours?'NOT':'is') + ' opened');
+			// console.log('Card ' + (hasNextRowNeighbours?'NOT':'is') + ' opened');
 
 			return !hasNextRowNeighbours;
 		}
 	}
 
-	play() {
+	static playGame() {
+		let game = new Pyramide();
 		$(() => {
-			this.initGui();
-			this.initDecks();
-			this.showDecks();
-			this.initHandlers();
+			game.initGui();
+			game.resetGui();
+			game.initButtonHandlers();
 		});
 	}
 
-	static playGame () {
-		let game = new Pyramide();
-		game.play();
+	saveGame (autosave = undefined) {
+		if( autosave === undefined ) {
+			autosave = {
+				deck: Object.keys(this.cardRegistry),
+			}
+		}
+		this.storage.setItem('autosave', JSON.stringify(autosave));
+
+		return true;
 	}
+
+	loadGame () {
+		return JSON.parse(this.storage.getItem('autosave'));
+	}
+
+	startGame (savedDeck = undefined) {
+		this.resetGui();
+		this.initDecks(savedDeck);
+		this.showDecks();
+		this.initHandlers();
+	}
+
 }
