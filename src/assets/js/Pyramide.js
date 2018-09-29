@@ -106,6 +106,18 @@ export default class Pyramide {
 		}
 	}
 
+	dropCards (arrayOfCards) {
+		for( let CardInfo of arrayOfCards )
+			this.dropCard(CardInfo.card, CardInfo.from);
+
+		// Check game win
+		if( this.isFieldDeckEmpty() ) {
+			alert(`You win a game with ${this.scores} scores!`);
+			//TODO: Win animation and popup
+			//TODO: User can choose next action from popup: New game, restart game, show leaderboard and etc.
+		}
+	}
+
 	dropCard(card, from) {
 		// Remove card from field
 		if( from.where === 'field' )
@@ -117,13 +129,6 @@ export default class Pyramide {
 		this.drop.push({card: card, from: from});
 		this.scores += card.score;
 		this.gui.changeScoreboard(this.scores);
-
-		// Check game win
-		if( this.isFieldDeckEmpty() ) {
-			alert(`You win a game with ${this.scores} scores!`);
-			//TODO: Win animation and popup
-			//TODO: User can choose next action from popup: New game, restart game, show leaderboard and etc.
-		}
 	}
 
 	isFieldDeckEmpty () {

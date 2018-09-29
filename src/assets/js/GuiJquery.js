@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import Deck from "./DeckJquery";
+import Functions from "./utils/Functions.js";
 
 export default class GuiJquery {
 	constructor(gameObject) {
@@ -44,7 +45,15 @@ export default class GuiJquery {
 
 			//TODO: Settings and other buttons
 			if( $t.hasClass(this.css.fullscreen) ) {
-				document.querySelector('body').webkitRequestFullscreen();
+				if( Functions.isInFullScreen() ) {
+					console.log('cancel fullscreen');
+					Functions.fullScreenCancel();
+				}
+				else {
+					console.log('request fullscreen');
+					Functions.fullScreen(document.querySelector('body'));
+				}
+
 				return true;
 			}
 
@@ -88,15 +97,14 @@ export default class GuiJquery {
 
 			//console.log(`Card is opened, let's find pair and drop it`);
 			if( data.score === 13 ) {
-				game.dropCard(card, from);
+				game.dropCards([{card, from}]);
 				this.dropCard(card, from);
 			}
 			else {
 				let fitCard = game.fitCard(card, from);
 				if( fitCard.card !== undefined ) {
-					game.dropCard(fitCard.card, fitCard.from);
+					game.dropCards([{card: fitCard.card, from: fitCard.from}, {card, from}]);
 					this.dropCard(fitCard.card, fitCard.from);
-					game.dropCard(card, from);
 					this.dropCard(card, from);
 				}
 			}
