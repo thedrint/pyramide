@@ -39,13 +39,16 @@ html, body {
     cursor: pointer;
     height:10vmin;
     width:10vmin;
-    background-size: contain;
+    background-size: cover;
 }
 .button.newgame {
     background: url('./../img/start-game.svg') center center;
 }
 .button.restartgame {
     background: url('./../img/restart-game.svg') center center;
+}
+.button.fullscreen {
+    background: url('./../img/fullscreen.svg') center center;
 }
 
 .dealer {

@@ -22,6 +22,7 @@ export default class GuiJquery {
 			button: 'button',
 			buttonNewGame: 'newgame',
 			buttonRestartGame: 'restartgame',
+			fullscreen: 'fullscreen',
 		};
 
 		this.q = {};
@@ -42,7 +43,8 @@ export default class GuiJquery {
 			let $t = $(event.currentTarget);
 
 			//TODO: Settings and other buttons
-			if( $t.hasClass('todoinfuture') ) {
+			if( $t.hasClass(this.css.fullscreen) ) {
+				document.querySelector('body').webkitRequestFullscreen();
 				return true;
 			}
 
