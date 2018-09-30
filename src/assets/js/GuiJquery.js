@@ -160,7 +160,7 @@ export default class GuiJquery {
 		let $game = $(this.q.game);
 		let $field = $game.find(this.q.field);
 
-		let cardWidth = $(this.q.card).width();
+		let cardWidth = Math.min($game.width(), $game.height()) / 4 * 0.6;
 		let cardHeight = cardWidth*1.5;
 
 		// Correct position of cards and rows
@@ -171,7 +171,7 @@ export default class GuiJquery {
 			$cardRow.css('z-index', zIndex);
 			$cardRow.css('top', `${rowIndex*cardHeight/2}px`);
 
-			let rowWidth = cardWidth * game.field[row].length;
+			let rowWidth = cardWidth * game.field[rowIndex].length;
 			let rowLeftPos = parseInt(($field.width() - rowWidth) / 2);
 			$cardRow.css('left', `${rowLeftPos}px`);
 
