@@ -6,6 +6,8 @@ export default class GuiJquery {
 	constructor(gameObject) {
 		this.game = gameObject;
 
+		this.resizeWindowHandlerHack = this.resizeWindowHandler.bind(this);
+
 		this.deck = new Deck();
 		// css classes
 		this.css = {
@@ -77,6 +79,8 @@ export default class GuiJquery {
 	initHandlers() {
 
 		let {game} = this;
+
+		$(window).off(`resize`, this.resizeWindowHandlerHack).on(`resize`, this.resizeWindowHandlerHack);
 		// Any card clicked
 		$(document).off(`click`, this.q.card).on(`click`, this.q.card, event => {
 			let $t = $(event.currentTarget);
@@ -136,8 +140,25 @@ export default class GuiJquery {
 				$cardImage.attr('data-index', i);
 				$cardRow.append($cardImage);
 			}
+			$cardRow.attr('data-row', row);
 			$field.append($cardRow);
 		}
+
+		this.fixCardsPosition();
+
+		// Show Ddeck shirt
+		this.showDealerDeckShirt();
+		this.changeScoreboard('0');
+	}
+
+	resizeWindowHandler () {
+		this.fixCardsPosition();
+	}
+
+	fixCardsPosition () {
+		let {game} = this;
+		let $game = $(this.q.game);
+		let $field = $game.find(this.q.field);
 
 		let cardWidth = $(this.q.card).width();
 		let cardHeight = cardWidth*1.5;
@@ -145,9 +166,10 @@ export default class GuiJquery {
 		// Correct position of cards and rows
 		$field.find(this.q.cardRow).each( (row, el) => {
 			let $cardRow = $(el);
-			let zIndex = parseInt(row) + 1;
+			let rowIndex = $cardRow.data('row');
+			let zIndex = parseInt(rowIndex) + 1;
 			$cardRow.css('z-index', zIndex);
-			$cardRow.css('top', `${row*cardHeight/2}px`);
+			$cardRow.css('top', `${rowIndex*cardHeight/2}px`);
 
 			let rowWidth = cardWidth * game.field[row].length;
 			let rowLeftPos = parseInt(($field.width() - rowWidth) / 2);
@@ -155,14 +177,11 @@ export default class GuiJquery {
 
 			$cardRow.find(this.q.card).each( (index, cardEl) => {
 				let $cardImage = $(cardEl);
-				$cardImage.css('z-index', row + 1);
-				$cardImage.css('left', `${index*cardWidth}px`);
+				let cardIndex = $cardImage.data('index');
+				$cardImage.css('z-index', rowIndex + 1);
+				$cardImage.css('left', `${cardIndex*cardWidth}px`);
 			});
 		});
-
-		// Show Ddeck shirt
-		this.showDealerDeckShirt();
-		this.changeScoreboard('0');
 	}
 
 	showDealerDeckShirt() {
