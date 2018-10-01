@@ -27,6 +27,7 @@ export default class GuiJquery {
 			buttonRestartGame: 'restartgame',
 			fullscreen: 'fullscreen',
 			undo: 'undo',
+			disabled: 'disabled',
 		};
 
 		this.q = {};
@@ -261,5 +262,13 @@ export default class GuiJquery {
 	updateScoreboard () {
 		let $scoreboard = $(this.q.scoreboardText);
 		$scoreboard.text(this.game.scores.toString().padStart(3, '0'));
+	}
+
+	updateUndoButton () {
+		let {game} = this;
+		if( game.hasUndo() )
+			$(`${this.q.button}${this.q.undo}`).removeClass(this.css.disabled);
+		else
+			$(`${this.q.button}${this.q.undo}`).addClass(this.css.disabled);
 	}
 }

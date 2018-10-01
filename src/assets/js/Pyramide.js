@@ -68,6 +68,7 @@ export default class Pyramide {
 
 	showDecks() {
 		this.gui.showDecks();
+		this.gui.updateUndoButton();
 	}
 
 	initHandlers () {
@@ -82,9 +83,13 @@ export default class Pyramide {
 		this.actionStack.push({action, params});
 		let actionMethod = `do${action}`;
 		this[actionMethod](...params);
+		this.gui.updateUndoButton();
 	}
 
 	undoAction () {
+		if( !this.hasUndo() )
+			return false;
+
 		let lastAction = this.actionStack.pop();
 		if( !lastAction ) {
 			return false;
@@ -93,6 +98,11 @@ export default class Pyramide {
 		let {action, params} = lastAction;
 		let actionMethod = `undo${action}`;
 		this[actionMethod](...params);
+		this.gui.updateUndoButton();
+	}
+
+	hasUndo () {
+		return ( this.actionStack.length > 0 );
 	}
 
 	doGetCardFromDealer() {
