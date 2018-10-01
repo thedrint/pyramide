@@ -1,7 +1,4 @@
-html, body {
-    margin: 0;
-    padding: 0;
-}
+@import "~bootstrap/scss/bootstrap";
 
 :root {
     /* 100vh / 4 - card target height, *0.66 - card width/height relation */
@@ -17,7 +14,7 @@ html, body {
 }
 
 .field {
-    height: calc(100vh);
+    //height: calc(100vh);
 }
 
 .buttons {
@@ -89,14 +86,15 @@ html, body {
     box-sizing: border-box;
     border: 3px white solid;
     border-radius: 1vmin;
+    overflow: hidden;
 }
 
 .scoreboard-text {
     display:block;
     text-align: center;
     color:white;
-    font-size: calc(var(--cardWidth) * 0.6);
-    line-height: var(--cardWidth);
+    font-size: calc(var(--cardWidth) * 0.5);
+    line-height: calc( var(--cardWidth) * 0.9 );
     font-weight: bold;
     vertical-align: middle;
 }
@@ -113,15 +111,16 @@ html, body {
 
 .card {
     position: absolute;
-    /*position: relative;*/
     display: inline-block;
     margin: 0;
     padding: 0.2vmin;
-    /*font-size: 800%;*/
     line-height: 100%;
     border-radius: 1vmin;
     background: transparent;
     outline: transparent;
+    cursor: pointer;
+    border:none;
+
 }
 .dealer .card {
     position:relative;
@@ -147,3 +146,19 @@ html, body {
     color: black;
 }
 
+#gameModal .modal-body {
+    border:none;
+    padding:15vmin 10vmin;
+}
+#gameModal .modal-content {
+    min-height:50vmin;
+    min-width:50vmin;
+    background: url('./../img/modal-border.svg') center center no-repeat;
+    background-size: 100% 100%;
+    background-clip: border-box;
+    background-color: rgba(255, 255, 255, 0.8);
+    font-size:3rem;
+    color:black;
+    cursor: pointer;
+    border-radius:20%;
+}

@@ -27,9 +27,14 @@ module.exports = {
 		],
 	},
 	plugins: [
-		new CleanWebpackPlugin([wwwData]),
-		CopyWebpackPlugin([
+		new CleanWebpackPlugin([wwwData], {
+			exclude: [
+				`${wwwData}/assets/img/decks`,
+			],
+		}),
+		new CopyWebpackPlugin([
 			{from: './assets/img/decks', to: './assets/img/decks', context: './src'},
+			{from: './assets/locales', to: './assets/locales', context: './src'},
 		]),
 		// new SpriteLoaderPlugin(),
 		// new SVGSpritemapPlugin({
@@ -69,7 +74,7 @@ module.exports = {
 				],
 			},
 			{
-				test: /\.css$/,
+				test: /\.(sass|scss)$/,
 				include: path.resolve(__dirname, './src/assets/css'),
 				use: [
 					{
@@ -78,11 +83,18 @@ module.exports = {
 					},
 					{
 						loader: 'css-loader',
-						// options:{context: 'src', name:'[path][name].[ext]', sourceMap: false, minimize: true},
+						options:{
+							// context: 'src',
+							sourceMap: false,
+							minimize: true,
+						},
 					},
-					// {
-					// 	loader: 'style-loader',
-					// },
+					{
+						loader: "sass-loader",
+						options: {
+							sourceMap: false,
+						}
+					},
 				],
 			},
 		]

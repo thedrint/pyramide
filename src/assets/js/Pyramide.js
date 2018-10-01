@@ -1,9 +1,28 @@
 import Gui from './Gui.js';
 import $ from "jquery";
+import i18next from 'i18next';
+import i18nextXhrBackend from 'i18next-xhr-backend';
+import i18nextBrowserLanguagedetector from 'i18next-browser-languagedetector';
 
 export default class Pyramide {
 	constructor() {
 		this.storage = localStorage;
+
+		this.i18n = i18next;
+		this.i18n
+			.use(i18nextBrowserLanguagedetector)
+			.use(i18nextXhrBackend)
+			.init({
+			fallbackLng: 'ru',
+			lng: 'ru',
+			ns: ['common'],
+			defaultNS: 'common',
+			backend: {
+				// load from i18next-gitbook repo
+				loadPath: './assets/locales/{{lng}}/{{ns}}.json',
+				crossDomain: true,
+			}
+		});
 		this.gui = undefined;
 		this.deck = undefined;
 		this.cardRegistry = {};
@@ -121,7 +140,7 @@ export default class Pyramide {
 		}
 		else {
 			if( this.currentRewind > this.maxRewinds-1 ) {
-				console.log('You cannot rewind anymore!');
+				this.gui.showModal(this.i18n.t('You cannot rewind anymore!'));
 				return false;
 			}
 			// Set all cards from Dslot to Ddeck
@@ -132,7 +151,7 @@ export default class Pyramide {
 			this.slot = [];
 			gui.showEmptySlot();
 			this.currentRewind++;
-			console.log('You rewind dealer deck!');
+			// console.log('You rewind dealer deck!');
 			gui.showDealerDeckShirt();
 		}
 	}
@@ -172,9 +191,8 @@ export default class Pyramide {
 
 		// Check game win
 		if( this.isFieldDeckEmpty() ) {
-			alert(`You win a game with ${this.scores} scores!`);
-			//TODO: Win animation and popup
-			//TODO: User can choose next action from popup: New game, restart game, show leaderboard and etc.
+			this.gui.showModal(this.i18n.t('You win a game!', {count: this.scores}));
+			//TODO: Win animation
 		}
 	}
 

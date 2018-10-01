@@ -1,0 +1,7 @@
+{
+  "You cannot rewind anymore!": "Количество перемоток колоды исчерпано!",
+  "You win a game!": "Победа!<br>Вы набрали<br>$t(Scores, {'count': {{scores}} })!",
+  "Scores_0": "{{count}} очко",
+  "Scores_1": "{{count}} очка",
+  "Scores_2": "{{count}} очков"
+}

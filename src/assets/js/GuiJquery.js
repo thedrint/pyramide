@@ -1,4 +1,7 @@
 import $ from 'jquery';
+//import popper from 'popper.js';
+import 'bootstrap';
+
 import Deck from "./DeckJquery";
 import Functions from "./utils/Functions.js";
 
@@ -34,12 +37,24 @@ export default class GuiJquery {
 		for( let i in this.css ) {
 			this.q[i] = `.${this.css[i]}`;
 		}
+
+		// css id
+		this.id = {
+			gameModal: 'gameModal',
+		};
+
+		for( let i in this.id ) {
+			this.q[i] = `#${this.id[i]}`;
+		}
 	}
 
 	resetGui () {
 		this.showDealerDeckShirt();
 		this.showEmptySlot();
 		this.updateScoreboard();
+		this.updateUndoButton();
+		// this.showModal(`Победа!<br>Вы набрали<br>123 очка!`);
+		// this.showModal(`Количество перемоток колоды исчерпано!`);
 	}
 
 	initButtonHandlers () {
@@ -133,11 +148,10 @@ export default class GuiJquery {
 		let $game = $(this.q.game);
 		let $field = $game.find(this.q.field);
 		$field.empty();
-		let $dealer = $game.find(this.q.dealer);
 		// Fill field with cards in rows
-		for (let row in game.field) {
+		for (let row = 0; row < game.field.length; row++) {
 			let $cardRow = $(`<div class="${this.css.cardRow}"></div>`);
-			for (let i in game.field[row]) {
+			for (let i = 0; i < game.field[row].length; i++) {
 				let card = game.field[row][i];
 				let $cardImage = card.htmlimg();
 
@@ -270,5 +284,10 @@ export default class GuiJquery {
 			$(`${this.q.button}${this.q.undo}`).removeClass(this.css.disabled);
 		else
 			$(`${this.q.button}${this.q.undo}`).addClass(this.css.disabled);
+	}
+
+	showModal (html) {
+		$(`${this.q.gameModal} .modal-body`).html(html);
+		$(this.q.gameModal).modal('show');
 	}
 }
