@@ -26,6 +26,7 @@ export default class GuiJquery {
 			buttonNewGame: 'newgame',
 			buttonRestartGame: 'restartgame',
 			fullscreen: 'fullscreen',
+			undo: 'undo',
 		};
 
 		this.q = {};
@@ -37,7 +38,7 @@ export default class GuiJquery {
 	resetGui () {
 		this.showDealerDeckShirt();
 		this.showEmptySlot();
-		this.changeScoreboard('0');
+		this.updateScoreboard();
 	}
 
 	initButtonHandlers () {
@@ -48,14 +49,17 @@ export default class GuiJquery {
 			//TODO: Settings and other buttons
 			if( $t.hasClass(this.css.fullscreen) ) {
 				if( Functions.isInFullScreen() ) {
-					console.log('cancel fullscreen');
 					Functions.fullScreenCancel();
 				}
 				else {
-					console.log('request fullscreen');
 					Functions.fullScreen(document.querySelector('body'));
 				}
 
+				return true;
+			}
+
+			if( $t.hasClass(this.css.undo) ) {
+				game.undoAction();
 				return true;
 			}
 
@@ -101,13 +105,13 @@ export default class GuiJquery {
 
 			//console.log(`Card is opened, let's find pair and drop it`);
 			if( data.score === 13 ) {
-				game.dropCards([{card, from}]);
+				game.doAction('DropCards', [{card, from}]);
 				this.dropCard(card, from);
 			}
 			else {
 				let fitCard = game.fitCard(card, from);
 				if( fitCard.card !== undefined ) {
-					game.dropCards([{card: fitCard.card, from: fitCard.from}, {card, from}]);
+					game.doAction('DropCards', [{card: fitCard.card, from: fitCard.from}, {card, from}]);
 					this.dropCard(fitCard.card, fitCard.from);
 					this.dropCard(card, from);
 				}
@@ -117,7 +121,7 @@ export default class GuiJquery {
 
 		// Ddeck clicked
 		$(document).off(`click`, this.q.ddeck).on(`click`, this.q.ddeck, event => {
-			game.getCardFromDealer();
+			game.doAction('GetCardFromDealer');
 		});
 
 	}
@@ -148,7 +152,7 @@ export default class GuiJquery {
 
 		// Show Ddeck shirt
 		this.showDealerDeckShirt();
-		this.changeScoreboard('0');
+		this.updateScoreboard();
 	}
 
 	resizeWindowHandler () {
@@ -206,6 +210,28 @@ export default class GuiJquery {
 		$slot.append($cardimg);
 	}
 
+	showLastCardInSlot () {
+		let {game} = this;
+		this.showEmptySlot();
+		let lastSlotCard = game.slot.pop();
+		if( !lastSlotCard )
+			return true;
+
+		this.showCardInSlot(lastSlotCard);
+		game.slot.push(lastSlotCard);
+	}
+
+	showCardInField (card, from) {
+		let $field = $(this.q.field);
+		let $cardImage = card.htmlimg();
+		$cardImage.attr('data-row', from.row);
+		$cardImage.attr('data-index', from.index);
+		let $cardRow = $field.find(`${this.q.cardRow}[data-row="${from.row}"]`);
+		$cardRow.append($cardImage);
+
+		this.fixCardsPosition();
+	}
+
 	showEmptySlot () {
 		let $slot = $(this.q.dslot);
 		$slot.empty();
@@ -232,8 +258,8 @@ export default class GuiJquery {
 		}
 	}
 
-	changeScoreboard (newScores) {
+	updateScoreboard () {
 		let $scoreboard = $(this.q.scoreboardText);
-		$scoreboard.text(newScores.toString().padStart(3, '0'));
+		$scoreboard.text(this.game.scores.toString().padStart(3, '0'));
 	}
 }

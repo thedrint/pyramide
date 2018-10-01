@@ -50,6 +50,9 @@ html, body {
 .button.fullscreen {
     background: url('./../img/fullscreen.svg') center center;
 }
+.button.undo {
+    background: url('./../img/undo.svg') center center;
+}
 
 .dealer {
     position: absolute;

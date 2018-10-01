@@ -15,6 +15,8 @@ export default class Pyramide {
 		this.currentRewind = 0;
 
 		this.drop = [];
+		this.dropStack = [];
+		this.actionStack = [];
 
 		this.scores = 0;
 	}
@@ -40,6 +42,8 @@ export default class Pyramide {
 		this.slot = [];
 		this.currentRewind = 0;
 		this.drop = [];
+		this.dropStack = [];
+		this.actionStack = [];
 		this.scores = 0;
 		for( let card of htmlDeck ) {
 			this.cardRegistry[ card.getName() ] = card;
@@ -74,7 +78,24 @@ export default class Pyramide {
 		this.gui.initButtonHandlers();
 	}
 
-	getCardFromDealer() {
+	doAction (action, ...params) {
+		this.actionStack.push({action, params});
+		let actionMethod = `do${action}`;
+		this[actionMethod](...params);
+	}
+
+	undoAction () {
+		let lastAction = this.actionStack.pop();
+		if( !lastAction ) {
+			return false;
+		}
+
+		let {action, params} = lastAction;
+		let actionMethod = `undo${action}`;
+		this[actionMethod](...params);
+	}
+
+	doGetCardFromDealer() {
 		let {gui} = this;
 		// If Ddeck not empty
 		if (this.dealer.length) {
@@ -82,7 +103,7 @@ export default class Pyramide {
 			let newCard = this.dealer.shift();
 			// And set it to Dslot
 			this.slot.push(newCard);
-			gui.showCardInSlot(newCard);
+			gui.showLastCardInSlot();
 			// Show empty Ddeck if no more cards there
 			if( this.dealer.length === 0 ) {
 				gui.showEmptyDealerDeck();
@@ -94,8 +115,8 @@ export default class Pyramide {
 				return false;
 			}
 			// Set all cards from Dslot to Ddeck
-			for( let i in this.slot ) {
-				this.dealer.push(this.slot[i]);
+			for( let card of this.slot ) {
+				this.dealer.push(card);
 			}
 			// Clear slot;
 			this.slot = [];
@@ -106,9 +127,38 @@ export default class Pyramide {
 		}
 	}
 
-	dropCards (arrayOfCards) {
+	undoGetCardFromDealer () {
+		let {gui} = this;
+		let lastSlotCard = this.slot.pop();
+		if( lastSlotCard ) {
+			this.dealer.unshift(lastSlotCard);
+			gui.showDealerDeckShirt();
+			gui.showLastCardInSlot();
+		}
+		// Slot empty, check if dealer deck was rewinded
+		else {
+			// DDeck is not rewinded yet
+			if( this.currentRewind === 0 ) {
+				return false;
+			}
+
+			// DDeck was rewinded, undo this
+			for( let card of this.dealer ) {
+				this.slot.push(card);
+			}
+
+			this.dealer = [];
+			gui.showEmptyDealerDeck();
+			this.currentRewind--;
+			gui.showLastCardInSlot();
+		}
+	}
+
+	doDropCards (arrayOfCards) {
 		for( let CardInfo of arrayOfCards )
 			this.dropCard(CardInfo.card, CardInfo.from);
+
+		this.dropStack.push(arrayOfCards);
 
 		// Check game win
 		if( this.isFieldDeckEmpty() ) {
@@ -128,7 +178,37 @@ export default class Pyramide {
 		// Add card to drop
 		this.drop.push({card: card, from: from});
 		this.scores += card.score;
-		this.gui.changeScoreboard(this.scores);
+		this.gui.updateScoreboard();
+	}
+
+	undoDropCards () {
+		// Get cards from stack
+		let arrayOfCards = this.dropStack.pop();
+		// Mo more cards in stack
+		if( !arrayOfCards )
+			return false;
+
+		for( let CardInfo of arrayOfCards ) {
+			// Get card from drop and return it to the place
+			let {card, from} = CardInfo;
+			this.undropCard(card, from);
+		}
+
+
+	}
+
+	undropCard(card, from) {
+		if( from.where === 'slot' ) {
+			this.slot.push(card);
+			this.gui.showLastCardInSlot();
+		}
+		else if (from.where === 'field' ) {
+			this.field[from.row][from.index] = card;
+			this.gui.showCardInField(card, from);
+		}
+
+		this.scores -= card.score;
+		this.gui.updateScoreboard();
 	}
 
 	isFieldDeckEmpty () {
