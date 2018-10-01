@@ -54,6 +54,9 @@
 .button.undo {
     background: url('./../img/undo.svg') center center;
 }
+.button.help {
+    background: url('./../img/help.svg') center center;
+}
 
 .dealer {
     position: absolute;
@@ -145,20 +148,36 @@
 .suit-s {
     color: black;
 }
-
+#gameModal .modal-dialog {
+    max-width:80vw;
+}
 #gameModal .modal-body {
+    font-size:1.5rem;
+    color:black;
     border:none;
-    padding:15vmin 10vmin;
+    padding:15% 5% 15% 20%;
+    opacity:1;
+    background: none;
 }
 #gameModal .modal-content {
-    min-height:50vmin;
-    min-width:50vmin;
+    position:relative;
+    display:flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    cursor: pointer;
+    border-radius:5rem;
+    z-index:990;
+}
+#gameModal .modal-content::after {
+    content:"";
+    position: absolute;
+    top:0;left:0;bottom:0;right:0;
+    background-color: white;
+    z-index:999;
+    border-radius:5rem;
     background: url('./../img/modal-border.svg') center center no-repeat;
     background-size: 100% 100%;
     background-clip: border-box;
-    background-color: rgba(255, 255, 255, 0.8);
-    font-size:3rem;
-    color:black;
-    cursor: pointer;
-    border-radius:20%;
+    opacity: 0.5;
 }

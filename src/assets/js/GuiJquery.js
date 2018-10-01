@@ -31,6 +31,7 @@ export default class GuiJquery {
 			fullscreen: 'fullscreen',
 			undo: 'undo',
 			disabled: 'disabled',
+			help: 'help',
 		};
 
 		this.q = {};
@@ -76,6 +77,11 @@ export default class GuiJquery {
 
 			if( $t.hasClass(this.css.undo) ) {
 				game.undoAction();
+				return true;
+			}
+
+			if( $t.hasClass(this.css.help) ) {
+				this.showModal(game.i18n.t('Rules'));
 				return true;
 			}
 
