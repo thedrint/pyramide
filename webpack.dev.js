@@ -1,47 +1,51 @@
 const path = require('path');
-//const merge = require('webpack-merge');
-//const common = require('./webpack.common.js');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
-
-const wwwData = 'dev';// Site dir on server (relative to this config)
+const srcDir = './src';// Source dir (relative to this config)
+const dstDir = 'dev';// Site dir on server (relative to this config)
 
 module.exports = {
 	mode: "development",
 	devtool:"source-map",
-	entry: [
-		'./src/index.js',
-	],
+	devServer: {
+		contentBase: path.join(__dirname, dstDir),
+		publicPath: '/',
+	},
+	entry: {
+		index: `${srcDir}/index.js`
+	},
 	output:
 	{
-		path: path.resolve(__dirname, wwwData),
+		path: path.resolve(__dirname, dstDir),
 		filename: '[name].js',
 		publicPath: './',
 	},
 	plugins: [
-		new CleanWebpackPlugin([wwwData], {
-			exclude: [
-				`${wwwData}/assets/img/decks`,
+		new CleanWebpackPlugin({
+			// dry:true,
+			cleanOnceBeforeBuildPatterns: [
+				'index.html', 
+				'index.js*', 
+				'index.css*', 
+				'favicon.png', 
+				'assets/img/*', '!assets/img/decks/**', // exclude decks
+				'assets/locales/*', 
 			],
 		}),
 		new CopyWebpackPlugin([
-			{from: './assets/img/decks', to: './assets/img/decks', context: './src'},
-			{from: './assets/locales', to: './assets/locales', context: './src'},
+			{from: './assets/img/decks', to: './assets/img/decks', context: srcDir},
+			{from: './assets/locales', to: './assets/locales', context: srcDir},
 		]),
 		new MiniCssExtractPlugin(),
 		new HtmlWebpackPlugin({
 			title: 'Pyramide Test',
-			template: './src/index.html',
+			template: `${srcDir}/index.html`,
+			favicon: `${srcDir}/assets/img/favicon.png`,
 		}),
-		// new ExtractTextPlugin({
-		// 	filename: './assets/css/index.css',
-		// 	allChunks: true,
-		// }),
 	],
 	module:
 		{
@@ -49,12 +53,12 @@ module.exports = {
 				[
 					{
 						test: /\.(png|jpe?g|gif|svg)$/,
-						include: path.resolve(__dirname, './src/assets/img'),
+						include: path.resolve(__dirname, `${srcDir}/assets/img`),
 						use: [
 							{
 								loader: 'url-loader',
 								options: {
-									context: 'src', name:'[path][name].[ext]',
+									context: srcDir, name:'[path][name].[ext]',
 									limit: 128,
 								}
 							},
@@ -62,18 +66,18 @@ module.exports = {
 					},
 					{
 						test: /\.(sass|scss)$/,
-						include: path.resolve(__dirname, './src/assets/css'),
+						include: path.resolve(__dirname, `${srcDir}/assets/css`),
 						use: [
 							{
 								loader: MiniCssExtractPlugin.loader,
-								// options: {context: 'src', name:'[path][name].[ext]'},
+								// options: {context: srcDir, name:'[path][name].[ext]'},
 							},
 							{
 								loader: 'css-loader',
 								options:{
-									// context: 'src',
+									// context: srcDir,
 									sourceMap: true,
-									minimize: false,
+									// importLoaders: 1,
 								},
 							},
 							{
