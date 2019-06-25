@@ -1,5 +1,5 @@
 const path = require('path');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
@@ -8,13 +8,18 @@ const TerserPlugin = require('terser-webpack-plugin');
 // const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
 // const SVGSpritemapPlugin = require('svg-spritemap-webpack-plugin');
 
-const wwwData = 'public';// Site dir on server (relative to this config)
+
+const srcDir = './src';// Site dir on server (relative to this config)
+const dstDir = './';// Site dir on server (relative to this config)
 
 module.exports = {
 	mode: "production",
+	entry: {
+		index: `${srcDir}/index.js`
+	},
 	output:
 	{
-		path: path.resolve(__dirname, wwwData),
+		path: path.resolve(__dirname, dstDir),
 		filename: '[name].js',
 		publicPath: './',
 	},
@@ -27,14 +32,20 @@ module.exports = {
 		],
 	},
 	plugins: [
-		new CleanWebpackPlugin([wwwData], {
-			exclude: [
-				`${wwwData}/assets/img/decks`,
+		new CleanWebpackPlugin({
+			// dry:true,
+			cleanOnceBeforeBuildPatterns: [
+				'index.html', 
+				'index.js*', 
+				'index.css*', 
+				'favicon.png', 
+				'assets/img/*', '!assets/img/decks/**', // exclude decks
+				'assets/locales/*', 
 			],
 		}),
 		new CopyWebpackPlugin([
-			{from: './assets/img/decks', to: './assets/img/decks', context: './src'},
-			{from: './assets/locales', to: './assets/locales', context: './src'},
+			{from: './assets/img/decks', to: './assets/img/decks', context: srcDir},
+			{from: './assets/locales', to: './assets/locales', context: srcDir},
 		]),
 		// new SpriteLoaderPlugin(),
 		// new SVGSpritemapPlugin({
@@ -46,7 +57,8 @@ module.exports = {
 		new MiniCssExtractPlugin(),
 		new HtmlWebpackPlugin({
 			title: 'Pyramide Solitaire',
-			template: './src/index.html',
+			template: `${srcDir}/index.html`,
+			favicon: `${srcDir}/assets/img/favicon.png`,
 		}),
 	],
 	module:
@@ -62,12 +74,12 @@ module.exports = {
 			// },
 			{
 				test: /\.(png|jpe?g|gif|svg)$/,
-				include: path.resolve(__dirname, './src/assets/img'),
+				include: path.resolve(__dirname, `${srcDir}/assets/img`),
 				use: [
 					{
 						loader: 'url-loader',
 						options: {
-							context: 'src', name:'[path][name].[ext]',
+							context: srcDir, name:'[path][name].[ext]',
 							limit: 128,
 						}
 					},
@@ -79,14 +91,14 @@ module.exports = {
 				use: [
 					{
 						loader: MiniCssExtractPlugin.loader,
-						// options: {context: 'src', name:'[path][name].[ext]'},
+						// options: {context: srcDir, name:'[path][name].[ext]'},
 					},
 					{
 						loader: 'css-loader',
 						options:{
-							// context: 'src',
+							// context: srcDir,
 							sourceMap: false,
-							minimize: true,
+							// minimize: true,
 						},
 					},
 					{
