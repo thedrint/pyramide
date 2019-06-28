@@ -9,7 +9,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 // const SVGSpritemapPlugin = require('svg-spritemap-webpack-plugin');
 
 
-const srcDir = './src';// Site dir on server (relative to this config)
+const srcDir = './src-jquery';// Site dir on server (relative to this config)
 const dstDir = './';// Site dir on server (relative to this config)
 
 module.exports = {
