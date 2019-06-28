@@ -49,7 +49,7 @@ module.exports = {
 		]),
 		// new SpriteLoaderPlugin(),
 		// new SVGSpritemapPlugin({
-		// 	src: 'src/**/*.svg',
+		// 	src: `${srcDir}/**/*.svg`,
 		// 	svgo: {
 		// 		removeMetadata: true,
 		// 	},
@@ -87,7 +87,7 @@ module.exports = {
 			},
 			{
 				test: /\.(sass|scss)$/,
-				include: path.resolve(__dirname, './src/assets/css'),
+				include: path.resolve(__dirname, `${srcDir}/assets/css`),
 				use: [
 					{
 						loader: MiniCssExtractPlugin.loader,
