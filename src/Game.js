@@ -1,11 +1,18 @@
-import Gui from './Gui.js';
-import $ from "jquery";
+
+import Application from './Application';
+
 import i18next from 'i18next';
 import i18nextXhrBackend from 'i18next-xhr-backend';
 import i18nextBrowserLanguagedetector from 'i18next-browser-languagedetector';
 
-export default class Pyramide {
-	constructor() {
+export default class Game {
+
+	constructor (options) {
+		this.app = new Application(options);
+		this.app.game = this;
+		document.body.appendChild(this.app.view);
+		this.app.stop();
+
 		this.storage = localStorage;
 
 		this.i18n = i18next;
@@ -19,7 +26,7 @@ export default class Pyramide {
 			defaultNS: 'common',
 			backend: {
 				// load from i18next-gitbook repo
-				loadPath: './assets/locales/{{lng}}/{{ns}}.json',
+				loadPath: './locales/{{lng}}/{{ns}}.json',
 				crossDomain: true,
 			}
 		});
@@ -335,13 +342,11 @@ export default class Pyramide {
 		}
 	}
 
-	static playGame() {
-		let game = new Pyramide();
-		$(() => {
-			game.initGui();
-			game.resetGui();
-			game.initButtonHandlers();
-		});
+	static playGame(options) {
+		let game = new Game(options);
+		game.initGui();
+		game.resetGui();
+		game.initButtonHandlers();
 	}
 
 	saveGame (autosave = undefined) {
@@ -359,11 +364,17 @@ export default class Pyramide {
 		return JSON.parse(this.storage.getItem('autosave'));
 	}
 
-	startGame (savedDeck = undefined) {
+	startGame () {
 		this.resetGui();
 		this.initDecks(savedDeck);
 		this.showDecks();
 		this.initHandlers();
+
+		this.app.init();
+		this.app.start();
 	}
 
+	stopGame () {
+		this.app.stop();
+	}
 }

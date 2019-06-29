@@ -6,7 +6,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const srcDir = './src';// Source dir (relative to this config)
-const dstDir = 'dev';// Site dir on server (relative to this config)
+const dstDir = './dev';// Site dir on server (relative to this config)
 
 module.exports = {
 	mode: "development",
@@ -33,17 +33,16 @@ module.exports = {
 				'index.css*', 
 				'favicon.png', 
 				'assets/img/*', '!assets/img/decks/**', // exclude decks
-				'assets/locales/*', 
+				'locales/*', 
 			],
 		}),
 		new CopyWebpackPlugin([
 			{from: './assets/img/decks', to: './assets/img/decks', context: srcDir},
-			{from: './assets/locales', to: './assets/locales', context: srcDir},
+			{from: './locales', to: './locales', context: srcDir},
 		]),
 		new MiniCssExtractPlugin(),
 		new HtmlWebpackPlugin({
 			title: 'Pyramide Test',
-			template: `${srcDir}/index.html`,
 			favicon: `${srcDir}/assets/img/favicon.png`,
 		}),
 	],
@@ -62,6 +61,14 @@ module.exports = {
 									limit: 128,
 								}
 							},
+						],
+					},
+					{
+						test: /\.(css)$/,
+						// include: path.resolve(__dirname, srcDir),
+						use: [
+							'style-loader',
+							'css-loader',
 						],
 					},
 					{

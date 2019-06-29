@@ -1,5 +1,8 @@
-import PyramideGame from './assets/js/Pyramide.js';
 
-import './assets/css/index.scss';
+// Import the game and settings for the game
+import Game from './Game';
+import { Application as ApplicationSettings } from './Settings';
 
-PyramideGame.playGame();
+// Create and start new game
+let PyramideGame = new Game(ApplicationSettings);
+PyramideGame.startGame();
