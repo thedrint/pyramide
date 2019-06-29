@@ -12,12 +12,12 @@ export default class Application extends PIXI.Application {
 	constructor (options) {
 		super(options);
 		document.body.appendChild(this.view);
-		this.stage = new SceneManager(this);
-		this.fonts = WebFont;
 		this.stop();
 	}
 
 	init () {
+		this.stage = new SceneManager(this);
+		this.fonts = WebFont;
 		this.textures = {};
 
 		this.initScenes();
@@ -28,10 +28,8 @@ export default class Application extends PIXI.Application {
 	initScenes () {
 		let loadScene = new LoadScene("LoadScene");
 		this.stage.add(loadScene);
-
 		let mainScene = new MainScene("MainScene");
 		this.stage.add(mainScene);
-
 		this.stage.switchTo("LoadScene");
 	}
 }

@@ -3,8 +3,8 @@ import Card from './Card.js';
 import ShuffleArray from './utils/knuthShuffle.js';
 
 export default class Deck {
+	
 	constructor () {
-		super();
 	}
 
 	static getCardSymbol (suit, rank) {
@@ -13,28 +13,12 @@ export default class Deck {
 	}
 
 	getCards (deckArray = undefined) {
-		let htmlCards = [];
-		let cards = [];
-		if( deckArray === undefined ) {
-			cards = Object.keys(this.constructor.cards);
-			cards = ShuffleArray.knuthShuffle(cards);
-		}
-		else {
-			cards = deckArray.slice(0);
-		}
-
-		for( const cardname of cards )
-			htmlCards.push(new Card(cardname));
-
-		return htmlCards;
+		let cards = deckArray ? deckArray.slice(0) : ShuffleArray.knuthShuffle( Object.keys(this.constructor.cards) );
+		return cards.reduce((a,c)=>{return [...a, new Card(c)]}, []);
 	}
 
 	getCardsNamesArray (deck) {
-		let deckArray = [];
-		for( let card of deck )
-			deckArray.push(card.getName());
-
-		return deckArray;
+		return deck.reduce((a,c)=>{return [...a, c.name]}, []);
 	}
 
 	static shirtimg () {

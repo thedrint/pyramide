@@ -27,7 +27,10 @@ export default class Scene extends Container {
 	drawChild (child, position = new PIXI.Point(0,0)) {
 		this.addChild(child);
 		child.scene = this;
-		child.setTransform(position.x, position.y);
+		let pos = child.spawn || position;
+		child.x = pos.x;
+		child.y = pos.y;
+		// child.setTransform(pos.x, pos.y);
 	}
 
 	static createEllipse (x, y, width, height, color) {

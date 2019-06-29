@@ -1,29 +1,15 @@
-import Gui from './Gui.js';
-import $ from "jquery";
-import i18next from 'i18next';
-import i18nextXhrBackend from 'i18next-xhr-backend';
-import i18nextBrowserLanguagedetector from 'i18next-browser-languagedetector';
+ 
+ import * as PyramideCommands from './command/PyramideCommands';
 
+/**
+ * Describe logic of Pyramide solitaire
+ */
 export default class Pyramide {
-	constructor() {
-		this.storage = localStorage;
-
-		this.i18n = i18next;
-		this.i18n
-			.use(i18nextBrowserLanguagedetector)
-			.use(i18nextXhrBackend)
-			.init({
-			fallbackLng: 'ru',
-			lng: 'ru',
-			ns: ['common'],
-			defaultNS: 'common',
-			backend: {
-				// load from i18next-gitbook repo
-				loadPath: './locales/{{lng}}/{{ns}}.json',
-				crossDomain: true,
-			}
-		});
-		this.gui = undefined;
+	constructor(scene) {
+		this.scene = scene;
+		this.app = scene.app;
+		this.game = this.app.game;
+		
 		this.deck = undefined;
 		this.cardRegistry = {};
 
@@ -35,25 +21,17 @@ export default class Pyramide {
 
 		this.drop = [];
 		this.dropStack = [];
-		this.actionStack = [];
+		this.trash = [];
+		this.pool = [];
 
 		this.scores = 0;
-	}
-
-	initGui (type = 'jquery') {
-		this.gui = new Gui(type, this);
-		this.deck = this.gui.deck;
-	}
-
-	resetGui () {
-		this.gui.resetGui();
 	}
 
 	initDecks(savedDeck = undefined) {
 		// get card deck, new random, or predefined from saveDeck
 		let htmlDeck = this.deck.getCards(savedDeck);
 		// save it to storage
-		this.saveGame({deck:this.deck.getCardsNamesArray(htmlDeck)});
+		this.game.saveGame({deck:this.deck.getCardsNamesArray(htmlDeck)});
 		// Reset cardRegistry
 		this.cardRegistry = {};
 		this.field = [];
@@ -65,7 +43,7 @@ export default class Pyramide {
 		this.actionStack = [];
 		this.scores = 0;
 		for( let card of htmlDeck ) {
-			this.cardRegistry[ card.getName() ] = card;
+			this.cardRegistry[ card.name ] = card;
 		}
 		let row = 0;
 		for (let i = 0; i < 28; i++) {
@@ -85,116 +63,26 @@ export default class Pyramide {
 		}
 	}
 
-	showDecks() {
-		this.gui.showDecks();
-		this.gui.updateUndoButton();
-	}
-
-	initHandlers () {
-		this.gui.initHandlers();
-	}
-
-	initButtonHandlers() {
-		this.gui.initButtonHandlers();
-	}
+	action (name, ...params) { return new PyramideCommands[name](this, name, ...params); }
 
 	doAction (action, ...params) {
-		this.actionStack.push({action, params});
 		let actionMethod = `do${action}`;
-		this[actionMethod](...params);
-		this.gui.updateUndoButton();
+		let com = this.pool.execute(this.action(actionMethod, ...params));
+		// this.gui.updateUndoButton();
+		this.trash.push(com);
 	}
 
 	undoAction () {
-		if( !this.hasUndo() )
-			return false;
+		if( !this.hasUndo() ) return false;
+		let lastAction = this.trash.pop();
 
-		let lastAction = this.actionStack.pop();
-		if( !lastAction ) {
-			return false;
-		}
-
-		let {action, params} = lastAction;
+		let {name, params} = lastAction;
 		let actionMethod = `undo${action}`;
 		this[actionMethod](...params);
 		this.gui.updateUndoButton();
 	}
 
-	hasUndo () {
-		return ( this.actionStack.length > 0 );
-	}
-
-	doGetCardFromDealer() {
-		let {gui} = this;
-		// If Ddeck not empty
-		if (this.dealer.length) {
-			// Get card from Ddeck
-			let newCard = this.dealer.shift();
-			// And set it to Dslot
-			this.slot.push(newCard);
-			gui.showLastCardInSlot();
-			// Show empty Ddeck if no more cards there
-			if( this.dealer.length === 0 ) {
-				gui.showEmptyDealerDeck();
-			}
-		}
-		else {
-			if( this.currentRewind > this.maxRewinds-1 ) {
-				this.gui.showModal(this.i18n.t('You cannot rewind anymore!'));
-				return false;
-			}
-			// Set all cards from Dslot to Ddeck
-			for( let card of this.slot ) {
-				this.dealer.push(card);
-			}
-			// Clear slot;
-			this.slot = [];
-			gui.showEmptySlot();
-			this.currentRewind++;
-			// console.log('You rewind dealer deck!');
-			gui.showDealerDeckShirt();
-		}
-	}
-
-	undoGetCardFromDealer () {
-		let {gui} = this;
-		let lastSlotCard = this.slot.pop();
-		if( lastSlotCard ) {
-			this.dealer.unshift(lastSlotCard);
-			gui.showDealerDeckShirt();
-			gui.showLastCardInSlot();
-		}
-		// Slot empty, check if dealer deck was rewinded
-		else {
-			// DDeck is not rewinded yet
-			if( this.currentRewind === 0 ) {
-				return false;
-			}
-
-			// DDeck was rewinded, undo this
-			for( let card of this.dealer ) {
-				this.slot.push(card);
-			}
-
-			this.dealer = [];
-			gui.showEmptyDealerDeck();
-			this.currentRewind--;
-			gui.showLastCardInSlot();
-		}
-	}
-
-	doDropCards (arrayOfCards) {
-		for( let CardInfo of arrayOfCards )
-			this.dropCard(CardInfo.card, CardInfo.from);
-
-		this.dropStack.push(arrayOfCards);
-
-		// Check game win
-		if( this.isFieldDeckEmpty() ) {
-			this.gui.showModal(this.i18n.t('You win a game!', {count: this.scores}));
-			//TODO: Win animation
-		}
-	}
+	hasUndo () { return ( this.trash.length > 0 ); }
 
 	dropCard(card, from) {
 		// Remove card from field
@@ -207,22 +95,6 @@ export default class Pyramide {
 		this.drop.push({card: card, from: from});
 		this.scores += card.score;
 		this.gui.updateScoreboard();
-	}
-
-	undoDropCards () {
-		// Get cards from stack
-		let arrayOfCards = this.dropStack.pop();
-		// Mo more cards in stack
-		if( !arrayOfCards )
-			return false;
-
-		for( let CardInfo of arrayOfCards ) {
-			// Get card from drop and return it to the place
-			let {card, from} = CardInfo;
-			this.undropCard(card, from);
-		}
-
-
 	}
 
 	undropCard(card, from) {
@@ -333,37 +205,6 @@ export default class Pyramide {
 
 			return !hasNextRowNeighbours;
 		}
-	}
-
-	static playGame() {
-		let game = new Pyramide();
-		$(() => {
-			game.initGui();
-			game.resetGui();
-			game.initButtonHandlers();
-		});
-	}
-
-	saveGame (autosave = undefined) {
-		if( autosave === undefined ) {
-			autosave = {
-				deck: Object.keys(this.cardRegistry),
-			}
-		}
-		this.storage.setItem('autosave', JSON.stringify(autosave));
-
-		return true;
-	}
-
-	loadGame () {
-		return JSON.parse(this.storage.getItem('autosave'));
-	}
-
-	startGame (savedDeck = undefined) {
-		this.resetGui();
-		this.initDecks(savedDeck);
-		this.showDecks();
-		this.initHandlers();
 	}
 
 }

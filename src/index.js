@@ -4,5 +4,4 @@ import Game from './Game';
 import { Application as ApplicationSettings } from './Settings';
 
 // Create and start new game
-let PyramideGame = new Game(ApplicationSettings);
-PyramideGame.startGame();
+Game.playGame(ApplicationSettings);

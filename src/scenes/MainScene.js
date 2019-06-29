@@ -5,29 +5,38 @@ import IntersectHelper from './../IntersectHelper';
 import Vector from './../base/Vector';
 import Utils from './../Utils';
 
-import Colors from './../Colors';
-import { UNIT } from './../Constants';
+import Pyramide from './../Pyramide';
 
+import Colors from './../Colors';
 import Scene from './../Scene';
-import Unit from './../Unit';
-import UnitManager from './../UnitManager';
+import Deck from "./../Deck";
+import Card from './../Card';
+import CardManager from './../CardManager';
 import RegistryManager from './../RegistryManager';
 
-import Crate from './../models/Crate';
+import Scoreboard from './../models/Scoreboard';
+import Button from './../models/Button';
 
 import Test from './../Test';
 
-import Deck from "./PixiDeck";
-import Functions from "./utils/Functions";
+import Functions from "./../utils/Functions";
 
 export default class MainScene extends Scene {
 
 	constructor (name, options = {}) {
 		super(name, options);
 
-		this.scene = scene;
-		this.game = scene.app.game;
+	}
 
+	init () {
+		this.game = this.app.game;
+		this.logic = new Pyramide(this);
+		this.initGameObjects();
+	}
+
+	preload () {}
+
+	create () {
 		this.resizeWindowHandlerHack = this.resizeWindowHandler.bind(this);
 
 		this.deck = new Deck();
@@ -66,24 +75,43 @@ export default class MainScene extends Scene {
 		for( let i in this.id ) {
 			this.q[i] = `#${this.id[i]}`;
 		}
-	}
 
-	init () {
-		this.initGameObjects();
-	}
-
-	preload () {}
-
-	create () {
 		// Create floor
 		let table = new PIXI.TilingSprite(this.app.textures.Table, this.app.screen.width, this.app.screen.height);
 		this.addChild(table);
 		// CoordiNet
 		this.drawCoords(32);
+		// Create Dealer
+		// Create Buttons
+		let buttons = [
+			new Button({name:'Undo',model:{textures:{main:this.app.textures.Undo}}}),
+			new Button({name:'RestartGame',model:{textures:{main:this.app.textures.RestartGame}}}),
+			new Button({name:'StartGame',model:{textures:{main:this.app.textures.StartGame}}}),
+			new Button({name:'Fullscreen',model:{textures:{main:this.app.textures.Fullscreen}}}),
+			new Button({name:'Help',model:{textures:{main:this.app.textures.Help}}}),
+		];
+		let bY = 128;
+		buttons.forEach(b=>{
+			this.drawChild(b, new PIXI.Point(this.app.screen.width - 64, bY));
+			bY += 64;
+		});
+		// Create Field
+		// Create Modal
+		// Create Scoreboard
+		let scoreboard = new Scoreboard();
+		scoreboard.spawn = new PIXI.Point(
+			this.app.screen.width - 64,
+			64,
+		);
+		this.drawChild(scoreboard, scoreboard.spawnPoint);
 	}
 
 	// Main update loop of scene
 	update () {
+		if( this.logic.pool.length ) {
+			let com = this.logic.pool.execute();
+			this.logic.trash.add(com);
+		}
 	}
 
 	/**
@@ -91,46 +119,16 @@ export default class MainScene extends Scene {
 	 * @return none
 	 */
 	initGameObjects () {
-		this.cards = new UnitManager(this);
+		this.cards = new CardManager(this);
 		this.registry = new RegistryManager(this);
 	}
 
-	createUnit (settings, 
-		type     = UNIT.TYPE.UNIT, 
-		party    = UNIT.PARTY.ENEMY, 
-		position = new PIXI.Point(0,0)
-	) {
-		let unit = new type(settings);
-		unit.spawnPoint = position;
-
-		this.drawChild(unit, unit.spawnPoint);
-		
-		this.cards.add(unit);
-
-		return unit;
-	}
-
-	getUnitSettingsByTemplate (typeTemplate, customSettings) {
-		let unitSettingsTpl;
-		switch( typeTemplate ) {
-			default:
-				unitSettingsTpl = {name:`Bad Guy`, 
-					attrs: {lvl:10, attack:5},
-					model: {
-						textures: {
-							weapon: this.app.textures.Sword,
-							shield: this.app.textures.RoundShield,
-						},
-					},
-				};
-				break;
-		}
-
-		return Utils.deepMerge(unitSettingsTpl, customSettings)
-	}
-
-	drawcardHelpers (f) {
-		this.drawBounds(f.Shield, Colors.metal).drawBounds(f.Weapon, Colors.pink);
+	createCard (suitrank, position = new PIXI.Point(0,0)) {
+		let card = new Card(suitrank);
+		card.spawn = position;
+		this.drawChild(card, card.spawnPoint);
+		this.cards.add(card);
+		return card;
 	}
 
 	drawHelpers () {
@@ -383,6 +381,17 @@ export default class MainScene extends Scene {
 	showModal (html) {
 		$(`${this.q.gameModal} .modal-body`).html(html);
 		$(this.q.gameModal).modal('show');
+	}
+
+	startRound () {
+		this.app.start();
+
+		this.resetGui();
+		this.initDecks(savedDeck);
+		this.app.showDecks();
+		this.app.updateUndoButton();
+		this.initHandlers();
+
 	}
 
 }

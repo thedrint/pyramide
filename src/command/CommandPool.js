@@ -14,7 +14,9 @@ export default class CommandPool extends Array {
 	 */
 	execute (command = undefined) {
 		let com = (command || this.getFirst()).execute();
-		if( !command && (com.isEnded || com.isFailed) ) this.delete(0);
+		if( !command && (com.isEnded || com.isFailed) ) {
+			this.delete(0);
+		}
 		return com;
 	}
 }

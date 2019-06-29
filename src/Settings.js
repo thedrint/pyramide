@@ -29,112 +29,40 @@ export const Unit = {
 };
 
 export const Defaults = {
-	unit: {
-		name: 'John Doe', 
-		spec: UNIT.SPECIALIZATION.INFANTRY, 
-		attrs : {
-			immortal : false,
-			lvl      : 0,
-			hp       : undefined,
-			mp       : undefined,
-			attack   : 0,
-			defend   : 0,
-			speed    : 1,
-		},
-		skills : {
-			strength  : 0,
-			agility   : 0,
-			intellect : 0,
-		},
-		equipment : {
-			head    : undefined,
-			hands   : {
-				right : undefined,
-				left  : undefined,
-			},
-			fingers : undefined,
-			foots   : undefined,
-			neck    : undefined,
-			legs    : undefined,
-			body    : undefined,
-			arms    : undefined,
-		},
+	Card: {
 		model : {
-			size        : Game.unit.size,
-			colors      : {
-				armor     : Colors.green,
-				helmet    : Colors.black,
-				weapon    : Colors.metal,
-				shield    : Colors.brown,				
-			},
+			size        : Unit.size,
 			textures    : {
-				armor     : undefined,
-				helmet    : undefined,
-				weapon    : undefined,
-				shield    : undefined,				
+				main     : undefined,
+				face     : undefined,
+				shirt    : undefined,
 			},
 		},
 	}, 
-	body : {
-		name : `Body`,
+	Button: {
+		model : {
+			size        : 1/2,
+			textures    : {
+				main      : undefined,
+				pressed   : undefined,
+			},
+		},
+	}, 
+	Scoreboard : {
+		name : `Scoreboard`,
 		attrs : {
-			defend : 0,
+			scores : 0,
 		}, 
 		model : {
-			size  : 1,
-			color : Colors.green,
-			texture: undefined,
+			width  : 1,
+			height  : 1,
+			fontColor : Colors.white,
+			backgroundColor : Colors.green,
+			textures : {
+				main: undefined,
+			},
 		}, 
 	}, 
-	helmet : {
-		name : `Helmet`,
-		attrs : {
-			defend : 0,
-		}, 
-		model : {
-			size  : 1,
-			color : Colors.black,
-			texture: undefined,
-		}, 
-	}, 
-	weapon : {
-		name : `Weapon`,
-		attrs : {
-			damage : 1,
-		}, 
-		model : {
-			size  : 1,
-			color : Colors.metal,
-			texture: undefined,
-		}, 
-	}, 
-	shield : {
-		name : `Shield`,
-		attrs : {
-			defend : 1,
-		}, 
-		model : {
-			size  : 0.75,
-			color : Colors.brown,
-			texture: undefined,
-		}, 
-	}, 
-	crate : {
-		name : `Crate`,
-		attrs : {
-			defend : 1000,
-		}, 
-		model : {
-			size  : 1,
-			color : Colors.brown,
-			texture: undefined,
-		}, 
-	}, 
-	party : {
-		name   : 'Bandits',
-		faction : 'Bandits', 
-		color   : Colors.red, 
-	}
 };
 
 export const WebFont = {

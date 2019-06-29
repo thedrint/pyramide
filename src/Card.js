@@ -1,7 +1,9 @@
 
 import * as PIXI from 'pixi.js';
 import Container from './base/Container';
-import Deck from './PixiDeck.js';
+import Deck from './Deck';
+
+import {Defaults} from './Settings';
 
 export default class Card extends Container {
 
@@ -10,38 +12,81 @@ export default class Card extends Container {
 	 * @param suit - suit (can be s, c, h, or d) or suit+rank (s10 for spade ten, for example)
 	 * @param [rank]
 	 */
-	constructor (suit, rank = undefined) {
-		if( rank === undefined ) {
-			suit = suit.toString().toLowerCase();
-			let re = /^([schd]{1})([\dajqk]{1,2})$/;
-			let result = re.exec(suit);
-			suit = result[1];
-			rank = result[2];
-		}
-		else {
-			suit = suit.toString().toLowerCase();
-			rank = rank.toString().toLowerCase();
-		}
+	constructor (suitrank) {
+		suitrank = suitrank.toString().toLowerCase();
+		let re = /^([schd]{1})([\dajqk]{1,2})$/;
+		let result = re.exec(suitrank);
+		suit = result[1];
+		rank = result[2];
+
 		this.suit = suit;
 		this.rank = rank;
-		this.score = this.getScore();
+		this._name = `${this.suit}${this.rank}`;
+		this._score = this.constructor.scores[this.rank];
+
+		this.initModel();
 	}
 
-	getScore () {
-		return this.constructor.scores[this.rank];
+	initModel (model = Defaults.Card.model) {
+		let params = Utils.cleanOptionsObject(model, Defaults.Card.model);
+		let models = [];
+
+		let modelWidth = params.size * UnitSettings.size;
+
+		let res = params.textures.face.baseTexture.resource;
+		let svgTexture = PIXI.BaseTexture.from(res);
+		svgTexture.setSize(modelWidth, res.height * modelWidth/res.width);
+		let faceTexture = new PIXI.Texture(svgTexture);
+		let face = PIXI.Sprite.from(faceTexture);
+		// crate.anchor.set(0.5);
+		// crate.x -= crateWidth/2;
+		// crate.y -= crateHeight/2;
+		// crate.pivot.x = 0.5 * crate.width;
+		// crate.pivot.y = 0.5 * crate.height;
+		// crate.angle = 45;
+		face.name = `Face`;
+		models.push(face);
+
+		res = params.textures.shirt.baseTexture.resource;
+		svgTexture = PIXI.BaseTexture.from(res);
+		svgTexture.setSize(modelWidth, res.height * modelWidth/res.width);
+		let shirtTexture = new PIXI.Texture(svgTexture);
+		let shirt = PIXI.Sprite.from(shirtTexture);
+		// crate.anchor.set(0.5);
+		// crate.x -= crateWidth/2;
+		// crate.y -= crateHeight/2;
+		// crate.pivot.x = 0.5 * crate.width;
+		// crate.pivot.y = 0.5 * crate.height;
+		// crate.angle = 45;
+		shirt.name = `Shirt`;
+		shirt.visible = false;
+		models.push(shirt);
+
+		this.addChild(...models);
+		// this.pivot.x += 0;
+		// this.pivot.y += 0;
+
+		this.shape = new IntersectHelper.Rectangle(this);
 	}
 
-	getName () {
-		return `${this.suit}${this.rank}`;
+	showFace () {
+		this.face.visible = true;
+		this.shirt.visible = false;
+	}
+	showShirt () {
+		this.shirt.visible = true;
+		this.face.visible = false;
 	}
 
-	htmlsymbol () {
+	get score () { return this._score; }
+	get name  () { return this._name; }
+	get model () { return this.getChildByName('Face'); }
+	get face () { return this.getChildByName('Face'); }
+	get shirt () { return this.getChildByName('Shirt'); }
+
+	get symbol () {
 		let {suit, rank} = this;
-		let cardSymbol = Deck.getCardSymbol(suit, rank);
-		let htmlTag = `<div class="card suit-${suit}" \
-			data-suit="${suit}" data-rank="${rank}" data-name="${this.getName()}" data-score="${this.getScore()}" \
-			>${cardSymbol}</div>`;
-		return htmlTag;
+		return Deck.getCardSymbol(suit, rank);
 	}
 
 	htmlimg () {
