@@ -6,6 +6,7 @@ export const Application = {
 	width: 800,
 	height: 600,
 	autoStart: false, 
+	autoResize: true,
 	backgroundColor: Colors.breeze,
 };
 
@@ -31,12 +32,7 @@ export const Unit = {
 export const Defaults = {
 	Card: {
 		model : {
-			size        : Unit.size,
-			textures    : {
-				main     : undefined,
-				face     : undefined,
-				shirt    : undefined,
-			},
+			size       : 1,
 		},
 	}, 
 	Button: {
@@ -61,6 +57,29 @@ export const Defaults = {
 			textures : {
 				main: undefined,
 			},
+		}, 
+	}, 
+	ModalBox : {
+		name : `ModalBox`,
+		attrs : {
+			text : 'Some content of modal box',
+		}, 
+		model : {
+			width  : 512,
+			height  : 256,
+			fontColor : Colors.black,
+			backgroundColor : Colors.white,
+		}, 
+	}, 
+	Dealer : {
+		name : `Dealer`,
+		attrs : {
+			scores : 0,
+		}, 
+		model : {
+			size: 1,
+			lineSize  : 8,
+			color  : Colors.white,
 		}, 
 	}, 
 };

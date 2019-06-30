@@ -10,8 +10,8 @@ export default class Pyramide {
 		this.app = scene.app;
 		this.game = this.app.game;
 		
-		this.deck = undefined;
-		this.cardRegistry = {};
+		this.deck = scene.deck;
+		this.cardRegistry = scene.cards;
 
 		this.field = [];
 		this.dealer = [];
@@ -25,42 +25,41 @@ export default class Pyramide {
 		this.pool = [];
 
 		this.scores = 0;
+		console.log(this.deck);
 	}
 
 	initDecks(savedDeck = undefined) {
 		// get card deck, new random, or predefined from saveDeck
-		let htmlDeck = this.deck.getCards(savedDeck);
+		let tmpDeck = this.deck.getCards(savedDeck);
 		// save it to storage
-		this.game.saveGame({deck:this.deck.getCardsNamesArray(htmlDeck)});
+		this.game.saveRound({deck:this.deck.getCardsNamesArray(tmpDeck)});
 		// Reset cardRegistry
-		this.cardRegistry = {};
+		this.cardRegistry.clear();
+		for( let card of tmpDeck ) 
+			this.cardRegistry.add(card);
+
 		this.field = [];
 		this.dealer = [];
 		this.slot = [];
 		this.currentRewind = 0;
 		this.drop = [];
 		this.dropStack = [];
-		this.actionStack = [];
+		this.trash = [];
 		this.scores = 0;
-		for( let card of htmlDeck ) {
-			this.cardRegistry[ card.name ] = card;
-		}
+
 		let row = 0;
 		for (let i = 0; i < 28; i++) {
-			if (this.field[row] === undefined)
-				this.field[row] = [];
+			if (this.field[row] === undefined) this.field[row] = [];
 
-			let card = htmlDeck[i];
-
+			let card = tmpDeck.shift();
 			this.field[row].push(card);
 
-			if (this.field[row].length >= row + 1)
-				row++;
+			if (this.field[row].length >= row + 1) row++;
 		}
 
-		for (let i = 28; i < htmlDeck.length; i++) {
-			this.dealer.push(htmlDeck[i]);
-		}
+		while( tmpDeck.length ) this.dealer.push(tmpDeck.shift());
+
+		// console.log(this.field, this.dealer);
 	}
 
 	action (name, ...params) { return new PyramideCommands[name](this, name, ...params); }
@@ -79,7 +78,7 @@ export default class Pyramide {
 		let {name, params} = lastAction;
 		let actionMethod = `undo${action}`;
 		this[actionMethod](...params);
-		this.gui.updateUndoButton();
+		// this.gui.updateUndoButton();
 	}
 
 	hasUndo () { return ( this.trash.length > 0 ); }

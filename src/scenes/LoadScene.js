@@ -9,6 +9,8 @@ import { WebFont as WebFontConfig } from './../Settings';
 import Utils from './../Utils';
 import Colors from './../Colors';
 
+import Card from './../Card';
+
 import Scene from './../Scene';
 // load sprites - we have predefined object list of imported textures
 import { Textures as ImageTextures } from './../assets/img/Textures';
@@ -46,10 +48,14 @@ export default class LoadScene extends Scene {
 		let loader = PIXI.Loader.shared;
 		const textures = {};
 		// Add to queue textures we need
-		for( let name in ImageTextures ) 
+		// console.log(ImageTextures);
+		for( let name in ImageTextures ) {
+			// console.log(name, ImageTextures[name]);
 			loader.add(name, ImageTextures[name]);
+		}
 
 		loader.load((loader, resources) => {
+			// console.log(resources);
 			for( let name in resources ) 
 				textures[name] = resources[name].texture;
 			
@@ -65,6 +71,7 @@ export default class LoadScene extends Scene {
 				this.app.stage.switchTo("MainScene");
 			}
 		});
+
 	}
 
 	create () {
@@ -140,9 +147,9 @@ export default class LoadScene extends Scene {
 			progress.visible = true;
 
 			// Redraw only for tens
-			if( loadingProgress%10 == 0 ) {
+			if( true || loadingProgress%10 == 0 ) {
 				let text = this.progressBar.getChildByName('Text');
-				text.text = `${loadingProgress}%`;
+				text.text = `${Number.parseInt(loadingProgress)}%`;
 				text.visible = true;
 			}
 

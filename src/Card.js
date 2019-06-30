@@ -1,9 +1,11 @@
 
 import * as PIXI from 'pixi.js';
+import IntersectHelper from './IntersectHelper';
+import Utils from './Utils';
 import Container from './base/Container';
 import Deck from './Deck';
 
-import {Defaults} from './Settings';
+import {Unit as UnitSettings, Defaults} from './Settings';
 
 export default class Card extends Container {
 
@@ -13,14 +15,18 @@ export default class Card extends Container {
 	 * @param [rank]
 	 */
 	constructor (suitrank) {
+		super();
+		this.interactive = true;
+
 		suitrank = suitrank.toString().toLowerCase();
 		let re = /^([schd]{1})([\dajqk]{1,2})$/;
 		let result = re.exec(suitrank);
-		suit = result[1];
-		rank = result[2];
+		let suit = result[1];
+		let rank = result[2];
 
 		this.suit = suit;
 		this.rank = rank;
+		this.attrs = {};
 		this._name = `${this.suit}${this.rank}`;
 		this._score = this.constructor.scores[this.rank];
 
@@ -30,10 +36,11 @@ export default class Card extends Container {
 	initModel (model = Defaults.Card.model) {
 		let params = Utils.cleanOptionsObject(model, Defaults.Card.model);
 		let models = [];
-
+		let loader = PIXI.Loader.shared;
 		let modelWidth = params.size * UnitSettings.size;
+		let resName = `Card_${this.name}`;
 
-		let res = params.textures.face.baseTexture.resource;
+		let res = loader.resources[resName].texture.baseTexture.resource;
 		let svgTexture = PIXI.BaseTexture.from(res);
 		svgTexture.setSize(modelWidth, res.height * modelWidth/res.width);
 		let faceTexture = new PIXI.Texture(svgTexture);
@@ -47,7 +54,8 @@ export default class Card extends Container {
 		face.name = `Face`;
 		models.push(face);
 
-		res = params.textures.shirt.baseTexture.resource;
+		resName = `Shirt`;
+		res = loader.resources[resName].texture.baseTexture.resource;
 		svgTexture = PIXI.BaseTexture.from(res);
 		svgTexture.setSize(modelWidth, res.height * modelWidth/res.width);
 		let shirtTexture = new PIXI.Texture(svgTexture);
@@ -83,6 +91,10 @@ export default class Card extends Container {
 	get model () { return this.getChildByName('Face'); }
 	get face () { return this.getChildByName('Face'); }
 	get shirt () { return this.getChildByName('Shirt'); }
+
+	get isShirted () { return this.shirt.visible; }
+	get inSlot () { return this.attrs.slot; }
+	isOpened (from) { return this.scene.app.game.isCardOpened(from); }
 
 	get symbol () {
 		let {suit, rank} = this;

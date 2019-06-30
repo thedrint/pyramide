@@ -22,7 +22,7 @@ module.exports = {
 	{
 		path: path.resolve(__dirname, dstDir),
 		filename: '[name].js',
-		publicPath: './',
+		publicPath: '/',
 	},
 	plugins: [
 		new CleanWebpackPlugin({
@@ -32,12 +32,13 @@ module.exports = {
 				'index.js*', 
 				'index.css*', 
 				'favicon.png', 
-				'assets/img/*', '!assets/img/decks/**', // exclude decks
+				'assets/*', 
+				// '!assets/img/**', // exclude decks
 				'locales/*', 
 			],
 		}),
 		new CopyWebpackPlugin([
-			{from: './assets/img/decks', to: './assets/img/decks', context: srcDir},
+			// {from: './assets/img', to: './assets/img', context: srcDir},
 			{from: './locales', to: './locales', context: srcDir},
 		]),
 		new MiniCssExtractPlugin(),

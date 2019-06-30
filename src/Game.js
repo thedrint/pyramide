@@ -37,13 +37,13 @@ export default class Game {
 		game.app.start();
 	}
 
-	saveGame (autosave = undefined) {
+	saveRound (autosave = undefined) {
 		if( autosave === undefined ) autosave = { deck: Object.keys(this.cardRegistry) };
 		this.storage.setItem('autosave', JSON.stringify(autosave));
 		return true;
 	}
 
-	loadGame () { return JSON.parse(this.storage.getItem('autosave')); }
+	loadRound () { return JSON.parse(this.storage.getItem('autosave')); }
 
 	stopGame () { this.app.stop(); }
 }

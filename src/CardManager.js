@@ -24,7 +24,7 @@ export default class CardManager extends MapManager {
 	}
 
 	clear () {
-		this.values().forEach(v=>this.scene.registry.delete(v));
+		[...this.values()].forEach(v=>this.scene.registry.delete(v));
 		return super.clear();
 	}
 

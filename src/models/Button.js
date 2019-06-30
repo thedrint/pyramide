@@ -18,6 +18,9 @@ export default class Button extends Container {
 
 		super();
 
+		this.interactive = true;
+		this.buttonMode = true;
+
 		let { 
 			name = Defaults.Button.name, 
 			attrs = Defaults.Button.attrs, 

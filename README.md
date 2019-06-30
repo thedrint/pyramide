@@ -1,6 +1,6 @@
 # Pyramide
 Simple pyramide solitaire game
 
-[Demo](https://pyramide-game.zaq1xsw2.ru/index.html)
+[Demo](https://thedrint.github.io/pyramide/)
 
-[Working VK App](https://vk.com/app6704584)
+[Working VK App](https://vk.com/app7037478)
