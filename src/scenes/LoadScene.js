@@ -1,6 +1,6 @@
 
 import * as PIXI from 'pixi.js';
-
+import SvgLoader from './../utils/SvgLoader';
 // Local loading of font - have a bug in rendering, use Webfont instead
 // import './../../fonts/PressStart2P.css';
 //TODO: Haha, Webfont loads at first time with bug too
@@ -45,7 +45,11 @@ export default class LoadScene extends Scene {
 	}
 
 	preloadResources () {
+		console.log(PIXI.resources.INSTALLED);
 		let loader = PIXI.Loader.shared;
+		loader.pre(SvgLoader.pre);
+		loader.use(SvgLoader.use);
+		
 		const textures = {};
 		// Add to queue textures we need
 		// console.log(ImageTextures);

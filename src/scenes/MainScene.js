@@ -140,9 +140,9 @@ export default class MainScene extends Scene {
 		let {logic} = this;
 		let field = this.getField();
 		// Fill field with cards in rows
-		for (let row = 0; row < logic.field.length; row++) {
+		for( let row = 0; row < logic.field.length; row++ ) {
 			let cardRow = this.getRow(row);
-			for (let i = 0; i < logic.field[row].length; i++) {
+			for( let i = 0; i < logic.field[row].length; i++ ) {
 				let card = logic.field[row][i];
 				this.initUnit(card);
 				card.attrs.row = row;
@@ -152,7 +152,7 @@ export default class MainScene extends Scene {
 			}
 		}
 		// Show Ddeck shirt
-		// this.showDealerDeckShirt();
+		this.showDealerDeckShirt();
 		this.updateScoreboard();
 	}
 
@@ -161,15 +161,16 @@ export default class MainScene extends Scene {
 		let field = this.getField();//$game.find(this.q.field);
 		field.removeChildren();
 		// Fill field with rows
-		for (let row = 0; row < 7; row++) {
+		for( let row = 0; row < 7; row++ ) {
 			let cardRow = new Row(row);
 			field.addChild(cardRow);
 			cardRow.drawCells();
-			cardRow.x = this.app.screen.width/2 - this.testCard.width*(row+1)/2;
+			cardRow.x = this.app.screen.width/2 - (this.testCard.width+4)*(row+1)/2;
 			cardRow.y = row*this.testCard.height/2;
 			cardRow.zIndex = row;
-			console.log(cardRow.x, cardRow.y);
 		}
+
+		this.createCard('sq', new PIXI.Point(0, 256));
 	}
 
 	resizeWindowHandler () {

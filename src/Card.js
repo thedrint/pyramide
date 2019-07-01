@@ -2,6 +2,7 @@
 import * as PIXI from 'pixi.js';
 import IntersectHelper from './IntersectHelper';
 import Utils from './Utils';
+import Colors from './Colors';
 import Container from './base/Container';
 import Deck from './Deck';
 
@@ -17,6 +18,7 @@ export default class Card extends Container {
 	constructor (suitrank, settings = Defaults.Card) {
 		super(settings);
 		this.interactive = true;
+		this.buttonMode = true;
 
 		suitrank = suitrank.toString().toLowerCase();
 		let re = /^([schd]{1})([\dajqk]{1,2})$/;
@@ -39,43 +41,54 @@ export default class Card extends Container {
 		let loader = PIXI.Loader.shared;
 		// let modelWidth = params.size * UnitSettings.size;
 		let modelWidth = this.scene.cardWidth;
+		let modelHeight;
 		let resName = `Card_${this.name}`;
 
-		let res = loader.resources[resName].texture.baseTexture.resource;
-		let svgTexture = PIXI.BaseTexture.from(res);
-		svgTexture.setSize(modelWidth, res.height * modelWidth/res.width);
-		let faceTexture = new PIXI.Texture(svgTexture);
+		let res, baseTexture, svgTexture;
+		res = loader.resources[resName];
+		if( res.svgBaseTexture ) {
+			console.log(res.svgBaseTexture);
+			baseTexture = res.svgBaseTexture;
+		}
+		else
+			baseTexture = res.texture.baseTexture;
+		let resource = baseTexture.resource;
+		// console.log(baseTexture);
+		modelHeight = resource.height * modelWidth/resource.width;
+		console.log(resource.width, resource.height, modelWidth, modelHeight);
+		baseTexture.scaleMode =  PIXI.SCALE_MODES.NEAREST;// No need it for good-scaled svg.
+		baseTexture.setSize(modelWidth, modelHeight);
+		let faceTexture = new PIXI.Texture(baseTexture);
 		let face = PIXI.Sprite.from(faceTexture);
-		// crate.anchor.set(0.5);
-		// crate.x -= crateWidth/2;
-		// crate.y -= crateHeight/2;
-		// crate.pivot.x = 0.5 * crate.width;
-		// crate.pivot.y = 0.5 * crate.height;
-		// crate.angle = 45;
 		face.name = `Face`;
 		models.push(face);
 
 		resName = `Shirt`;
-		res = loader.resources[resName].texture.baseTexture.resource;
-		svgTexture = PIXI.BaseTexture.from(res);
-		svgTexture.setSize(modelWidth, res.height * modelWidth/res.width);
-		let shirtTexture = new PIXI.Texture(svgTexture);
+		res = loader.resources[resName];
+		if( res.svgTexture ) 
+			baseTexture = res.svgBaseTexture;
+		else
+			baseTexture = res.texture.baseTexture;
+		baseTexture.setSize(modelWidth, modelHeight);
+		let shirtTexture = new PIXI.Texture(baseTexture);
 		let shirt = PIXI.Sprite.from(shirtTexture);
-		// crate.anchor.set(0.5);
-		// crate.x -= crateWidth/2;
-		// crate.y -= crateHeight/2;
-		// crate.pivot.x = 0.5 * crate.width;
-		// crate.pivot.y = 0.5 * crate.height;
-		// crate.angle = 45;
 		shirt.name = `Shirt`;
 		shirt.visible = false;
 		models.push(shirt);
+
+		// let border = new PIXI.Graphics();
+		// border.clear();
+		// border.lineStyle(2, Colors.black, 0.8);
+		// border.drawShape(new PIXI.RoundedRectangle(0, 0, modelWidth, modelHeight, modelWidth*0.1));
+		// border.name = `Border`;
+		// models.push(border);
 
 		this.addChild(...models);
 		// this.pivot.x += 0;
 		// this.pivot.y += 0;
 
 		this.shape = new IntersectHelper.Rectangle(this);
+		// this.cacheAsBitmap = true;
 	}
 
 	showFace () {

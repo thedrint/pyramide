@@ -27,6 +27,7 @@ export const Game = {
 
 export const Unit = {
 	size: 64,
+	margin: 4,
 };
 
 export const Defaults = {

@@ -28,7 +28,6 @@ export default class Dealer extends Container {
 		let models = [];
 
 		let cardWidth = this.scene.cardWidth;
-		console.log(cardWidth);
 
 		// let modelWidth = params.size * UnitSettings.size;
 		let modelWidth = cardWidth;
@@ -53,7 +52,7 @@ export default class Dealer extends Container {
 		let slot = new PIXI.Graphics();
 		slot.clear();
 		slot.lineStyle(params.lineSize, params.color);
-		slot.drawShape(new PIXI.RoundedRectangle(modelWidth + 16, 0, modelWidth, modelHeight, params.lineSize));
+		slot.drawShape(new PIXI.RoundedRectangle(modelWidth + UnitSettings.margin, 0, modelWidth, modelHeight, params.lineSize));
 		slot.name = `Slot`;
 		models.push(slot);
 
