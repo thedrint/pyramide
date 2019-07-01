@@ -5,19 +5,15 @@ import IntersectHelper from './../IntersectHelper';
 import { Unit as UnitSettings, Defaults } from './../Settings';
 import Utils from './../Utils';
 
-import Graphics from './../base/Graphics';
+import Container from './../base/Container';
 
 import Scene from './../Scene';
 
-export default class Scoreboard extends Graphics {
+export default class Scoreboard extends Container {
 
-	constructor (settings = {
-		name  : Defaults.Scoreboard.name, 
-		attrs : Defaults.Scoreboard.attrs, 
-		model : Defaults.Scoreboard.model
-	}) {
+	constructor (settings = Defaults.Scoreboard) {
 
-		super();
+		super(settings);
 
 		let { 
 			name  = Defaults.Scoreboard.name, 
@@ -27,8 +23,6 @@ export default class Scoreboard extends Graphics {
 		this.name = name;
 		this.attrs = Utils.cleanOptionsObject(attrs, Defaults.Scoreboard.attrs);
 		this.scores = this.attrs.scores;
-
-		this.initModel(model);
 	}
 
 	initModel (model = Defaults.Scoreboard.model) {

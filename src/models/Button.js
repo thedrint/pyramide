@@ -10,13 +10,9 @@ import Scene from './../Scene';
 
 export default class Button extends Container {
 
-	constructor (settings = {
-		name  : Defaults.Button.name, 
-		attrs : Defaults.Button.attrs, 
-		model : Defaults.Button.model
-	}) {
+	constructor (settings = Defaults.Button) {
 
-		super();
+		super(settings);
 
 		this.interactive = true;
 		this.buttonMode = true;
@@ -29,8 +25,6 @@ export default class Button extends Container {
 		this.name = name;
 
 		this.attrs = Utils.cleanOptionsObject(attrs, Defaults.Button.attrs);
-
-		this.initModel(model);
 	}
 
 	initModel (model = Defaults.Button.model) {

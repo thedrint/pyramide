@@ -24,10 +24,10 @@ export default class Scene extends Container {
 		console.log('Updating...');
 	}
 
-	drawChild (child, position = new PIXI.Point(0,0)) {
+	drawChild (child, position = undefined) {
 		this.addChild(child);
-		child.scene = this;
-		let pos = child.spawn || position;
+		child.scene = child.scene || this;
+		let pos = position || child.spawn || new PIXI.Point(0,0);
 		child.x = pos.x;
 		child.y = pos.y;
 		// child.setTransform(pos.x, pos.y);
@@ -49,36 +49,6 @@ export default class Scene extends Container {
 		graphics.moveTo(start.x, start.y);
 		graphics.lineTo(end.x, end.y);
 		return graphics;
-	}
-
-	drawPath (o, color = Colors.black, size = 1, ...coords) {
-		if( !o.pathHelper ) {
-			o.pathHelper = new PIXI.Graphics();
-			o.pathHelper.name = 'PathHelper';
-		}
-
-		if( !coords.length )
-			return this;
-
-		o.pathHelper.clear();
-		o.pathHelper.lineStyle(size, color);
-		for( let i = 0; i < coords.length-1; i++ ) {
-			let coord = coords[i];
-			let nextCoord = coords[i+1];
-			o.pathHelper.moveTo(coord.x, coord.y);
-			o.pathHelper.lineTo(nextCoord.x, nextCoord.y);			
-		}
-
-		this.addChild(o.pathHelper);
-		return this;
-	}
-
-	removePath (o) {
-		if( o.pathHelper ) {
-			o.pathHelper.destroy();
-		}
-
-		return this;
 	}
 
 	static createShape (shape, color) {
@@ -145,32 +115,4 @@ export default class Scene extends Container {
 
 		return this;
 	}
-
-	drawLOS (o, t, color = Colors.black, size = 1) {
-		if( !o.losHelper ) {
-			o.losHelper = new Map();
-		}
-
-		if( o.losHelper.has(t) )
-			return this;
-
-		let los = o.sensor.getLOS(t);
-		let line = Scene.createLine(los.start, los.end, color, size);
-		line.target = t;
-		line.name = `LOSHelper`;
-		o.losHelper.set(t, line);
-		this.addChild(line);
-
-		return this;
-	}
-
-	removeLOS (o, t = undefined) {
-		if( !o.losHelper ) 
-			return this;
-		
-		let tLOS = o.losHelper.get(t);
-		o.losHelper.delete(t);
-		tLOS.destroy();
-	}
-
 }

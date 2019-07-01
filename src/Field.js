@@ -6,4 +6,8 @@ export default class Field extends Container {
 		this.name = 'Field';
 		this.sortableChildren = true;
 	}
+
+	getWidth () {
+		let w = this.scene.app.screen.width;
+	}
 }

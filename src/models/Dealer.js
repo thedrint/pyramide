@@ -11,31 +11,27 @@ import Scene from './../Scene';
 
 export default class Dealer extends Container {
 
-	constructor (settings = {
-		name  : Defaults.Dealer.name, 
-		attrs : Defaults.Dealer.attrs, 
-		model : Defaults.Dealer.model
-	}) {
+	constructor (settings = Defaults.Dealer) {
 
-		super();
+		super(settings);
 
 		let { 
-			name = Defaults.Dealer.name, 
-			attrs = Defaults.Dealer.attrs, 
-			model = Defaults.Dealer.model 
+			name, 
+			attrs, 
 		} = settings;
 		this.name = name;
-
 		this.attrs = Utils.cleanOptionsObject(attrs, Defaults.Dealer.attrs);
-
-		this.initModel(model);
 	}
 
 	initModel (model = Defaults.Dealer.model) {
 		let params = Utils.cleanOptionsObject(model, Defaults.Dealer.model);
 		let models = [];
 
-		let modelWidth = params.size * UnitSettings.size;
+		let cardWidth = this.scene.cardWidth;
+		console.log(cardWidth);
+
+		// let modelWidth = params.size * UnitSettings.size;
+		let modelWidth = cardWidth;
 
 		let resName = `Shirt`;
 		let res = PIXI.Loader.shared.resources[resName].texture.baseTexture.resource;

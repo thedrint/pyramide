@@ -31,8 +31,12 @@ export const Unit = {
 
 export const Defaults = {
 	Card: {
+		attrs: {
+			row : undefined,
+			index : undefined,
+		},
 		model : {
-			size       : 1,
+			size       : 2,
 		},
 	}, 
 	Button: {
@@ -77,7 +81,7 @@ export const Defaults = {
 			scores : 0,
 		}, 
 		model : {
-			size: 1,
+			size: 1.5,
 			lineSize  : 8,
 			color  : Colors.white,
 		}, 

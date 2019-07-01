@@ -8,8 +8,9 @@ import Utils from './../Utils';
 
 export default class Container extends PIXI.Container {
 
-	constructor () {
+	constructor (settings = {}) {
 		super();
+		this.settings = settings;
 	}
 
 	moveTo (target, speedInPixels = 1) {

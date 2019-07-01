@@ -25,7 +25,7 @@ export default class Pyramide {
 		this.pool = [];
 
 		this.scores = 0;
-		console.log(this.deck);
+		// console.log(this.deck);
 	}
 
 	initDecks(savedDeck = undefined) {

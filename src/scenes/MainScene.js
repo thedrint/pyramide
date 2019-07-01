@@ -21,6 +21,8 @@ import Scoreboard from './../models/Scoreboard';
 import Button from './../models/Button';
 import ModalBox from './../models/ModalBox';
 
+import {Unit as UnitSettings} from './../Settings';
+
 import Test from './../Test';
 
 import Functions from "./../utils/Functions";
@@ -30,11 +32,11 @@ export default class MainScene extends Scene {
 	constructor (name, options = {}) {
 		super(name, options);
 		this.sortableChildren = true;
-
 	}
 
 	init () {
 		this.initGameObjects();
+		this.cardWidth = this.app.screen.width/8;
 	}
 
 	preload () {}
@@ -42,77 +44,40 @@ export default class MainScene extends Scene {
 	create () {
 		this.resizeWindowHandlerHack = this.resizeWindowHandler.bind(this);
 
-		// css classes
-		this.css = {
-			dealer: 'dealer',
-			field: 'field',
-			ddeck: 'dealer-deck',
-			dslot: 'dealer-slot',
-			shirt: 'shirt',
-			card: 'card',
-			cardRow: 'cardrow',
-			cardRowWrapper: 'cardrow-wrapper',
-			game: 'game',
-			scoreboard: 'scoreboard',
-			scoreboardText: 'scoreboard-text',
-			button: 'button',
-			buttonNewGame: 'newgame',
-			buttonRestartGame: 'restartgame',
-			fullscreen: 'fullscreen',
-			undo: 'undo',
-			disabled: 'disabled',
-			help: 'help',
-		};
-
-		this.q = {};
-		for( let i in this.css ) {
-			this.q[i] = `.${this.css[i]}`;
-		}
-
-		// css id
-		this.id = {
-			gameModal: 'gameModal',
-		};
-
-		for( let i in this.id ) {
-			this.q[i] = `#${this.id[i]}`;
-		}
-
 		// Create floor
 		let table = new PIXI.TilingSprite(this.app.textures.Table, this.app.screen.width, this.app.screen.height);
 		this.addChild(table);
 		// CoordiNet
 		this.drawCoords(32);
 		// Create Dealer
-		let dealer = new Dealer();
+		let dealer = this.initUnit(new Dealer());
 		this.drawChild(dealer, new PIXI.Point(32, 32));
+		this.testCard = dealer.Shirt;
 		// Create Buttons
 		let buttons = [
-			new Button({name:'Undo',model:{textures:{main:this.app.textures.Undo}}}),
-			new Button({name:'RestartGame',model:{textures:{main:this.app.textures.RestartGame}}}),
-			new Button({name:'StartGame',model:{textures:{main:this.app.textures.StartGame}}}),
-			new Button({name:'Fullscreen',model:{textures:{main:this.app.textures.Fullscreen}}}),
-			new Button({name:'Help',model:{textures:{main:this.app.textures.Help}}}),
+			{name:'Undo',model:{textures:{main:this.app.textures.Undo}}},
+			{name:'RestartGame',model:{textures:{main:this.app.textures.RestartGame}}},
+			{name:'StartGame',model:{textures:{main:this.app.textures.StartGame}}},
+			{name:'Fullscreen',model:{textures:{main:this.app.textures.Fullscreen}}},
+			{name:'Help',model:{textures:{main:this.app.textures.Help}}},
 		];
 		let bY = 128;
 		buttons.forEach(b=>{
-			this.drawChild(b, new PIXI.Point(this.app.screen.width - 64, bY));
+			let button = this.initUnit(new Button(b));
+			this.drawChild(button, new PIXI.Point(this.app.screen.width - 64, bY));
 			bY += 64;
 		});
 		// Create Field
-		let field = new Field();
-		this.drawChild(field, new PIXI.Point(this.app.screen.width/4, this.app.screen.height/4))
+		let field = this.initUnit(new Field());
+		this.drawChild(field, new PIXI.Point(0, UnitSettings.size/2));
+		this.drawField();
 		// Create Modal
-		let modal = new ModalBox(this);
+		let modal = this.initUnit(new ModalBox());
 		this.drawChild(modal, new PIXI.Point(this.app.screen.width/2, this.app.screen.height/2));
 		// Create Scoreboard
-		let scoreboard = new Scoreboard();
-		scoreboard.spawn = new PIXI.Point(
-			this.app.screen.width - 64,
-			64,
-		);
-		this.drawChild(scoreboard, scoreboard.spawnPoint);
-
+		let scoreboard = this.initUnit(new Scoreboard());
+		this.drawChild(scoreboard, new PIXI.Point(this.app.screen.width - 64, 64));
+		// Activate buttons
 		this.initButtonHandlers();
 	}
 
@@ -136,10 +101,17 @@ export default class MainScene extends Scene {
 		this.logic = new Pyramide(this);
 	}
 
+	initUnit (unitObject, spawn = undefined) {
+		unitObject.scene = this;
+		unitObject.spawn = spawn;
+		if( unitObject.initModel )
+			unitObject.initModel(unitObject.settings.model);
+		return unitObject;
+	}
+
 	createCard (suitrank, position = new PIXI.Point(0,0)) {
-		let card = new Card(suitrank);
-		card.spawn = position;
-		this.drawChild(card, card.spawnPoint);
+		let card = this.initUnit(new Card(suitrank), position);
+		this.drawChild(card, card.spawn);
 		this.cards.add(card);
 		return card;
 	}
@@ -164,44 +136,40 @@ export default class MainScene extends Scene {
 		return this.getField().children.filter(child => {return child.name == 'Row' && child.row == row})[0]; 
 	}
 
-	showDecks() {
-		let {game, logic} = this;
-		// let $game = $(this.q.game);
-		let field = this.getField();//$game.find(this.q.field);
-		field.removeChildren();
+	showDecks () {
+		let {logic} = this;
+		let field = this.getField();
 		// Fill field with cards in rows
 		for (let row = 0; row < logic.field.length; row++) {
-			let cardRow = new Row(row);//$(`<div class="${this.css.cardRow}"></div>`);
+			let cardRow = this.getRow(row);
 			for (let i = 0; i < logic.field[row].length; i++) {
 				let card = logic.field[row][i];
-				console.log(card);
-
+				this.initUnit(card);
 				card.attrs.row = row;
 				card.attrs.index = i;
-				cardRow.addChild(card);
+				let cell = cardRow.getCell(i);
+				cell.addChild(card);
 			}
-			field.addChild(cardRow);
 		}
-
-		this.fixCardsPosition();
-
 		// Show Ddeck shirt
-		this.showDealerDeckShirt();
+		// this.showDealerDeckShirt();
 		this.updateScoreboard();
 	}
 
 	drawField () {
+		let {logic} = this;
 		let field = this.getField();//$game.find(this.q.field);
 		field.removeChildren();
 		// Fill field with rows
-		for (let row = 0; row < logic.field.length; row++) {
+		for (let row = 0; row < 7; row++) {
 			let cardRow = new Row(row);
 			field.addChild(cardRow);
-			cardRow.x = field.width/2;
-			cardRow.y = row*160/2;
+			cardRow.drawCells();
+			cardRow.x = this.app.screen.width/2 - this.testCard.width*(row+1)/2;
+			cardRow.y = row*this.testCard.height/2;
 			cardRow.zIndex = row;
+			console.log(cardRow.x, cardRow.y);
 		}
-
 	}
 
 	resizeWindowHandler () {
@@ -238,57 +206,50 @@ export default class MainScene extends Scene {
 
 	showCardInSlot(card) {
 		this.showEmptySlot();
-		let $slot = $(this.q.dslot);
-		let $cardimg = card.htmlimg();
-		$cardimg.attr('data-suit', card.suit);
-		$cardimg.attr('data-rank', card.rank);
-		$cardimg.attr('data-score', card.score);
-		$slot.append($cardimg);
+		let slot = this.getDealer().Slot;
+		slot.addChild(card);
 	}
 
 	showLastCardInSlot () {
-		let {game} = this;
+		let {game,logic} = this;
 		this.showEmptySlot();
-		let lastSlotCard = game.slot.pop();
+		let lastSlotCard = logic.slot.pop();
 		if( !lastSlotCard )
 			return true;
 
 		this.showCardInSlot(lastSlotCard);
-		game.slot.push(lastSlotCard);
+		logic.slot.push(lastSlotCard);
 	}
 
 	showCardInField (card, from) {
-		let $field = $(this.q.field);
-		let $cardImage = card.htmlimg();
-		$cardImage.attr('data-row', from.row);
-		$cardImage.attr('data-index', from.index);
-		let $cardRow = $field.find(`${this.q.cardRow}[data-row="${from.row}"]`);
-		$cardRow.append($cardImage);
+		let field = this.getField();
+		card.attrs.row = from.row;
+		card.attrs.index = from.index;
+		let cardRow = this.getRow(from.row);
+		cardRow.addChild(card);
 
 		this.fixCardsPosition();
 	}
 
-	showEmptySlot () {
-		this.getDealer().Slot.removeChildren();
-	}
+	showEmptySlot () { this.getDealer().Slot.removeChildren(); }
 
 	showEmptyDealerDeck() {
 		//TODO: show something other, maybe red stop symbol or rewind symbol. Need correct svg for this
 		let $dealerDeck = $(this.q.ddeck);
 		$dealerDeck.find('.card').css('visibility', 'hidden');
+		this.getDealer().Shirt.visible = false;
 	}
 
 	dropCard (card, from) {
-		let {game} = this;
-		let name = card.getName();
-		let $card = $(this.q.card).filter(`[data-name="${name}"]`);
-		$card.parent().find($card).remove();
+		let {game,logic} = this;
+		let name = card.name;
+		card.visible = false;//$card.parent().find($card).remove();
 		// If remove from slot - check slot not empty and restore last card from slot
 		if( from.where === 'slot' ) {
-			let slotCard = game.slot.pop();
+			let slotCard = logic.slot.pop();
 			if( slotCard !== undefined ) {
 				this.showCardInSlot(slotCard);
-				game.slot.push(slotCard);
+				logic.slot.push(slotCard);
 			}
 		}
 	}
@@ -361,13 +322,14 @@ export default class MainScene extends Scene {
 
 		let {game, logic} = this;
 		// Resize hack
-		window
-			.removeEventListener('resize', this.resizeWindowHandlerHack)
-			.addEventListener('resize', this.resizeWindowHandlerHack);
+		// window.removeEventListener('resize', this.resizeWindowHandlerHack)
+		// window.addEventListener('resize', this.resizeWindowHandlerHack);
 		
 		// Any card clicked
 		this.cards.forEach(card => {
 			card.off('click').on('click', () => {
+				console.log('card clicked!!!');
+				return true;
 				let data = card.attrs;
 				if( card.isShirted )
 					return true;

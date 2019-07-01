@@ -10,28 +10,23 @@ import Scene from './../Scene';
 
 export default class ModalBox extends Container {
 
-	constructor (scene, settings = Defaults.ModalBox) {
-		super();
-		this.scene = scene;
-		this.app = scene.app;
+	constructor (settings = Defaults.ModalBox) {
+		super(settings);
 
 		let { 
 			name  = Defaults.ModalBox.name, 
 			attrs = Defaults.ModalBox.attrs, 
-			model = Defaults.ModalBox.model 
 		} = settings;
 		this.name = name;
 		this.attrs = Utils.cleanOptionsObject(attrs, Defaults.ModalBox.attrs);
 		this._text = this.attrs.text;
-
-		this.initModel(model);
 	}
 
 	initModel (model = Defaults.ModalBox.model) {
 		let params = Utils.cleanOptionsObject(model, Defaults.ModalBox.model);
 
-		let modalWidth  = this.app.screen.width * 0.8;
-		let modalHeight = this.app.screen.height * 0.8;
+		let modalWidth  = this.scene.app.screen.width * 0.8;
+		let modalHeight = this.scene.app.screen.height * 0.8;
 
 		let models = [];
 

@@ -14,8 +14,8 @@ export default class Card extends Container {
 	 * @param suit - suit (can be s, c, h, or d) or suit+rank (s10 for spade ten, for example)
 	 * @param [rank]
 	 */
-	constructor (suitrank) {
-		super();
+	constructor (suitrank, settings = Defaults.Card) {
+		super(settings);
 		this.interactive = true;
 
 		suitrank = suitrank.toString().toLowerCase();
@@ -26,18 +26,19 @@ export default class Card extends Container {
 
 		this.suit = suit;
 		this.rank = rank;
-		this.attrs = {};
 		this._name = `${this.suit}${this.rank}`;
 		this._score = this.constructor.scores[this.rank];
-
-		this.initModel();
+		
+		let { attrs } = settings;
+		this.attrs = Utils.cleanOptionsObject(attrs, Defaults.Card.attrs);
 	}
 
 	initModel (model = Defaults.Card.model) {
 		let params = Utils.cleanOptionsObject(model, Defaults.Card.model);
 		let models = [];
 		let loader = PIXI.Loader.shared;
-		let modelWidth = params.size * UnitSettings.size;
+		// let modelWidth = params.size * UnitSettings.size;
+		let modelWidth = this.scene.cardWidth;
 		let resName = `Card_${this.name}`;
 
 		let res = loader.resources[resName].texture.baseTexture.resource;
