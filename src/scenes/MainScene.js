@@ -36,7 +36,7 @@ export default class MainScene extends Scene {
 
 	init () {
 		this.initGameObjects();
-		this.cardWidth = this.app.screen.width/8;
+		this.cardWidth = this.app.unitWidth;
 	}
 
 	preload () {}
@@ -48,7 +48,7 @@ export default class MainScene extends Scene {
 		let table = new PIXI.TilingSprite(this.app.textures.Table, this.app.screen.width, this.app.screen.height);
 		this.addChild(table);
 		// CoordiNet
-		this.drawCoords(32);
+		this.drawCoords(50);
 		// Create Dealer
 		let dealer = this.initUnit(new Dealer());
 		this.drawChild(dealer, new PIXI.Point(32, 32));

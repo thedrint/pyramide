@@ -11,9 +11,7 @@ import {Unit as UnitSettings, Defaults} from './Settings';
 export default class Card extends Container {
 
 	/**
-	 *
-	 * @param suit - suit (can be s, c, h, or d) or suit+rank (s10 for spade ten, for example)
-	 * @param [rank]
+	 * @param suitrank (s10 for spade ten, for example)
 	 */
 	constructor (suitrank, settings = Defaults.Card) {
 		super(settings);
@@ -53,11 +51,11 @@ export default class Card extends Container {
 		else
 			baseTexture = res.texture.baseTexture;
 		let resource = baseTexture.resource;
-		// console.log(baseTexture);
+		console.log(resource);
 		modelHeight = resource.height * modelWidth/resource.width;
 		console.log(resource.width, resource.height, modelWidth, modelHeight);
-		baseTexture.scaleMode =  PIXI.SCALE_MODES.NEAREST;// No need it for good-scaled svg.
-		baseTexture.setSize(modelWidth, modelHeight);
+		// baseTexture.scaleMode =  PIXI.SCALE_MODES.NEAREST;// No need it for good-scaled svg.
+		// baseTexture.setSize(modelWidth, modelHeight);
 		let faceTexture = new PIXI.Texture(baseTexture);
 		let face = PIXI.Sprite.from(faceTexture);
 		face.name = `Face`;

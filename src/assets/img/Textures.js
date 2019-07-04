@@ -23,16 +23,17 @@ for( let rank in Card.rankmap ) {
 	}
 }
 
-let promises = [];
-[].concat(buttonTexturePack, atlasTexturePack).forEach(v=>{
-	let [name,url] = v;
-	//ALERT: Very important to use webpackMode:"eager" to dynamically imported resources. But i don't know why:)
-	let p = import(/*webpackMode:"eager"*/`${url}`)
-		.then(m=>{return [name,m.default]})
-		.catch(e=>console.error(e));
-	promises.push(p);
-});
-Promise.all(promises)
-	.then(vals=>{Textures = vals.reduce((a,v)=>{a[v[0]]=v[1];return a},{})})
-	.catch(e=>console.error(e));
+Textures = [].concat(buttonTexturePack, atlasTexturePack);
+// let promises = [];
+// [].concat(buttonTexturePack, atlasTexturePack).forEach(v=>{
+// 	let [name,url] = v;
+// 	//ALERT: Very important to use webpackMode:"eager" to dynamically imported resources. But i don't know why:)
+// 	let p = import(/*webpackMode:"eager"*/`${url}`)
+// 		.then(m=>{return [name,m.default]})
+// 		.catch(e=>console.error(e));
+// 	promises.push(p);
+// });
+// Promise.all(promises)
+// 	.then(vals=>{Textures = vals.reduce((a,v)=>{a[v[0]]=v[1];return a},{})})
+// 	.catch(e=>console.error(e));
 export {Textures};

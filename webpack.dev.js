@@ -33,12 +33,12 @@ module.exports = {
 				'index.css*', 
 				'favicon.png', 
 				'assets/*', 
-				// '!assets/img/**', // exclude decks
+				'!assets/img/**', // exclude images
 				'locales/*', 
 			],
 		}),
 		new CopyWebpackPlugin([
-			// {from: './assets/img', to: './assets/img', context: srcDir},
+			{from: './assets/img', to: './assets/img', context: srcDir},
 			{from: './locales', to: './locales', context: srcDir},
 		]),
 		new MiniCssExtractPlugin(),
@@ -59,7 +59,7 @@ module.exports = {
 								loader: 'url-loader',
 								options: {
 									context: srcDir, name:'[path][name].[ext]',
-									limit: 128,
+									limit: 8,
 								}
 							},
 						],

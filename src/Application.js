@@ -12,6 +12,7 @@ export default class Application extends PIXI.Application {
 	constructor (options) {
 		super(options);
 		document.body.appendChild(this.view);
+		this.unitWidth = this.screen.width/8;
 		this.stop();
 	}
 
