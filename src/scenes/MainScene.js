@@ -12,20 +12,22 @@ import Scene from './../Scene';
 import Field from "./../Field";
 import Row from "./../Row";
 import Deck from "./../Deck";
+import Dealer from './../Dealer';
 import Card from './../Card';
 import CardManager from './../CardManager';
 import RegistryManager from './../RegistryManager';
 
-import Dealer from './../models/Dealer';
-import Scoreboard from './../models/Scoreboard';
-import Button from './../models/Button';
-import ModalBox from './../models/ModalBox';
+import Scoreboard from './../Scoreboard';
+import Button from './../Button';
+import ModalBox from './../ModalBox';
 
 import {Unit as UnitSettings} from './../Settings';
 
 import Test from './../Test';
 
 import Functions from "./../utils/Functions";
+
+import ShirtModel from './../model/Shirt';
 
 export default class MainScene extends Scene {
 
@@ -37,6 +39,7 @@ export default class MainScene extends Scene {
 	init () {
 		this.initGameObjects();
 		this.cardWidth = this.app.unitWidth;
+		this.cardSize = new ShirtModel().texture.orig;
 	}
 
 	preload () {}
@@ -50,33 +53,32 @@ export default class MainScene extends Scene {
 		// CoordiNet
 		this.drawCoords(50);
 		// Create Dealer
-		let dealer = this.initUnit(new Dealer());
-		this.drawChild(dealer, new PIXI.Point(32, 32));
-		this.testCard = dealer.Shirt;
+		let dealer = this.initUnit(new Dealer(), new PIXI.Point(32, 32));
+		this.drawUnit(dealer);
 		// Create Buttons
 		let buttons = [
-			{name:'Undo',model:{textures:{main:this.app.textures.Undo}}},
-			{name:'RestartGame',model:{textures:{main:this.app.textures.RestartGame}}},
-			{name:'StartGame',model:{textures:{main:this.app.textures.StartGame}}},
-			{name:'Fullscreen',model:{textures:{main:this.app.textures.Fullscreen}}},
-			{name:'Help',model:{textures:{main:this.app.textures.Help}}},
+			{model:{name:'Undo',textures:{main:this.app.textures.Undo}}},
+			{model:{name:'RestartGame',textures:{main:this.app.textures.RestartGame}}},
+			{model:{name:'StartGame',textures:{main:this.app.textures.StartGame}}},
+			{model:{name:'Fullscreen',textures:{main:this.app.textures.Fullscreen}}},
+			{model:{name:'Help',textures:{main:this.app.textures.Help}}},
 		];
 		let bY = 128;
 		buttons.forEach(b=>{
-			let button = this.initUnit(new Button(b));
-			this.drawChild(button, new PIXI.Point(this.app.screen.width - 64, bY));
+			let button = this.initUnit(new Button(b), new PIXI.Point(this.app.screen.width - 64, bY));
+			this.drawUnit(button);
 			bY += 64;
 		});
 		// Create Field
 		let field = this.initUnit(new Field());
-		this.drawChild(field, new PIXI.Point(0, UnitSettings.size/2));
+		this.drawUnit(field, new PIXI.Point(0, UnitSettings.size/2));
 		this.drawField();
 		// Create Modal
 		let modal = this.initUnit(new ModalBox());
-		this.drawChild(modal, new PIXI.Point(this.app.screen.width/2, this.app.screen.height/2));
+		this.drawUnit(modal, new PIXI.Point(this.app.screen.width/2, this.app.screen.height/2));
 		// Create Scoreboard
-		let scoreboard = this.initUnit(new Scoreboard());
-		this.drawChild(scoreboard, new PIXI.Point(this.app.screen.width - 64, 64));
+		let scoreboard = this.initUnit(new Scoreboard(), new PIXI.Point(this.app.screen.width - 64, 64));
+		this.drawUnit(scoreboard);
 		// Activate buttons
 		this.initButtonHandlers();
 	}
@@ -102,16 +104,21 @@ export default class MainScene extends Scene {
 	}
 
 	initUnit (unitObject, spawn = undefined) {
-		unitObject.scene = this;
-		unitObject.spawn = spawn;
-		if( unitObject.initModel )
-			unitObject.initModel(unitObject.settings.model);
+		if( unitObject.initModel ) {
+			unitObject.initModel(this);
+			unitObject.model.spawn = spawn;
+		}
 		return unitObject;
 	}
 
-	createCard (suitrank, position = new PIXI.Point(0,0)) {
+	drawUnit (unitObject, position = undefined) {
+		this.drawChild(unitObject.model, position);
+		this.registry.add(unitObject);
+	}
+
+	drawCard (suitrank, position = new PIXI.Point(0,0)) {
 		let card = this.initUnit(new Card(suitrank), position);
-		this.drawChild(card, card.spawn);
+		this.drawUnit(card, card.model.spawn);
 		this.cards.add(card);
 		return card;
 	}
@@ -125,7 +132,7 @@ export default class MainScene extends Scene {
 		// this.showEmptySlot();
 		this.updateScoreboard();
 		this.updateUndoButton();
-		// this.showModal(`Победа!<br>Вы набрали<br>123 очка!`);
+		// this.showModal(`Победа!\nВы набрали\n123 очка!`);
 		// this.showModal(`Количество перемоток колоды исчерпано!`);
 	}
 
@@ -133,10 +140,10 @@ export default class MainScene extends Scene {
 	getButton (name) { return this.getChildByName(name); }
 	getField () { return this.getChildByName('Field'); }
 	getRow (row) { 
-		return this.getField().children.filter(child => {return child.name == 'Row' && child.row == row})[0]; 
+		return this.getField().children.filter(child => {return child.name == 'Row' && child.logic.row == row})[0]; 
 	}
 
-	showDecks () {
+	drawDecks () {
 		let {logic} = this;
 		let field = this.getField();
 		// Fill field with cards in rows
@@ -147,8 +154,8 @@ export default class MainScene extends Scene {
 				this.initUnit(card);
 				card.attrs.row = row;
 				card.attrs.index = i;
-				let cell = cardRow.getCell(i);
-				cell.addChild(card);
+				let cell = cardRow.logic.getCell(i);
+				cell.model.addChild(card.model);
 			}
 		}
 		// Show Ddeck shirt
@@ -158,19 +165,22 @@ export default class MainScene extends Scene {
 
 	drawField () {
 		let {logic} = this;
-		let field = this.getField();//$game.find(this.q.field);
-		field.removeChildren();
+		let fieldModel = this.getField();
+		fieldModel.removeChildren();
 		// Fill field with rows
 		for( let row = 0; row < 7; row++ ) {
 			let cardRow = new Row(row);
-			field.addChild(cardRow);
-			cardRow.drawCells();
-			cardRow.x = this.app.screen.width/2 - (this.testCard.width+4)*(row+1)/2;
-			cardRow.y = row*this.testCard.height/2;
-			cardRow.zIndex = row;
+			cardRow.initModel(this);
+			fieldModel.addChild(cardRow.model);
+			cardRow.createCells();
+			cardRow.model.drawCells();
+			cardRow.model.x = this.app.screen.width/2 - (this.cardSize.width+4)*(row+1)/2;
+			cardRow.model.y = row*this.cardSize.height/2;
+			cardRow.model.zIndex = row;
 		}
 
-		this.createCard('sq', new PIXI.Point(0, 256));
+		// let testCard = this.drawCard('sq', new PIXI.Point(0, 256));
+		// testCard.model.showShirt();
 	}
 
 	resizeWindowHandler () {
@@ -275,7 +285,7 @@ export default class MainScene extends Scene {
 	startRound (savedDeck = undefined) {
 		this.resetGui();
 		this.logic.initDecks(savedDeck);
-		this.showDecks();
+		this.drawDecks();
 		this.updateUndoButton();
 		this.initHandlers();
 	}
@@ -328,7 +338,8 @@ export default class MainScene extends Scene {
 		
 		// Any card clicked
 		this.cards.forEach(card => {
-			card.off('click').on('click', () => {
+			console.log(card);
+			card.model.off('click').on('click', () => {
 				console.log('card clicked!!!');
 				return true;
 				let data = card.attrs;

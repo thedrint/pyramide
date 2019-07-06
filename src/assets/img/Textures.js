@@ -11,7 +11,7 @@ const buttonTexturePack = [
 	['StartGame'    , './start-game.svg'         ],
 	['Undo'         , './undo.svg'               ],
 	['Table'        , './tables/green-table.jpg' ],
-	['Shirt'        , './decks/atlas/shirt.svg'  ],
+	['Shirt'        , './decks/atlas/Atlas_deck_card_back_blue_and_brown.svg'  ],
 ];
 
 const atlasTexturePack = [];

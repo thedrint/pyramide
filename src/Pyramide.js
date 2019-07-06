@@ -59,7 +59,7 @@ export default class Pyramide {
 
 		while( tmpDeck.length ) this.dealer.push(tmpDeck.shift());
 
-		// console.log(this.field, this.dealer);
+		console.log(this.field, this.dealer);
 	}
 
 	action (name, ...params) { return new PyramideCommands[name](this, name, ...params); }

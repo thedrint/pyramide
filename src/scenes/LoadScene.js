@@ -45,13 +45,12 @@ export default class LoadScene extends Scene {
 	}
 
 	preloadResources () {
-		console.log(PIXI.resources.INSTALLED);
 		let loader = PIXI.Loader.shared;
-		// loader.pre(SvgLoader.pre);
+		// Add svgBaseTexture if svg card or shirt loaded
 		loader.use((resource, next) => {
 			if( resource.data && resource.extension === 'svg' ) {
 				let options = {};
-				if( /^Card_*/.test(resource.name) || resource.name == 'Shirt' )// Use scale for cards
+				if( /^Card_*/.test(resource.name) || resource.name == 'Shirt' )// Use scale for cards and shirt
 					options.scale = this.app.unitWidth/resource.texture.orig.width;
 				resource.svgBaseTexture = new PIXI.BaseTexture(new PIXI.resources.SVGResource(resource.url, options));
 			}
@@ -60,15 +59,10 @@ export default class LoadScene extends Scene {
 		
 		const textures = {};
 		// Add to queue textures we need
-		// console.log(ImageTextures);
-		for( let [name, url] of ImageTextures ) 
-			loader.add(name, `./../assets/img/${url}`);
+		for( let [name, url] of ImageTextures ) loader.add(name, `./../assets/img/${url}`);
 
 		loader.load((loader, resources) => {
-			// console.log(resources);
-			for( let name in resources ) 
-				textures[name] = resources[name].texture;
-			
+			for( let name in resources ) textures[name] = resources[name].texture;
 			Object.assign(this.app.textures, textures);
 		});
 
@@ -81,7 +75,6 @@ export default class LoadScene extends Scene {
 				this.app.stage.switchTo("MainScene");
 			}
 		});
-
 	}
 
 	create () {

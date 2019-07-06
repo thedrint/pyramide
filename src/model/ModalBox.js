@@ -8,22 +8,18 @@ import Container from './../base/Container';
 
 import Scene from './../Scene';
 
-export default class ModalBox extends Container {
+export default class ModalBoxModel extends Container {
 
-	constructor (settings = Defaults.ModalBox) {
-		super(settings);
-
-		let { 
-			name  = Defaults.ModalBox.name, 
-			attrs = Defaults.ModalBox.attrs, 
-		} = settings;
-		this.name = name;
-		this.attrs = Utils.cleanOptionsObject(attrs, Defaults.ModalBox.attrs);
-		this._text = this.attrs.text;
+	constructor (logic, scene) {
+		super(logic.settings);
+		this.logic = logic;
+		this.scene = scene;
+		this.name = this.settings.model.name;
+		this.init();
 	}
 
-	initModel (model = Defaults.ModalBox.model) {
-		let params = Utils.cleanOptionsObject(model, Defaults.ModalBox.model);
+	init () {
+		let params = this.settings.model;
 
 		let modalWidth  = this.scene.app.screen.width * 0.8;
 		let modalHeight = this.scene.app.screen.height * 0.8;

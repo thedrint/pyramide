@@ -6,32 +6,26 @@ import { Unit as UnitSettings, Defaults } from './../Settings';
 import Utils from './../Utils';
 
 import Container from './../base/Container';
-
 import Scene from './../Scene';
 
-export default class Scoreboard extends Container {
+export default class ScoreboardModel extends Container {
 
-	constructor (settings = Defaults.Scoreboard) {
+	constructor (logic, scene) {
 
-		super(settings);
-
-		let { 
-			name  = Defaults.Scoreboard.name, 
-			attrs = Defaults.Scoreboard.attrs, 
-			model = Defaults.Scoreboard.model 
-		} = settings;
-		this.name = name;
-		this.attrs = Utils.cleanOptionsObject(attrs, Defaults.Scoreboard.attrs);
-		this.scores = this.attrs.scores;
+		super(logic.settings);
+		let { model } = logic.settings;
+		this.name = model.name;
+		this.init();
 	}
 
-	initModel (model = Defaults.Scoreboard.model) {
-		let params = Utils.cleanOptionsObject(model, Defaults.Scoreboard.model);
+	init () {
+		let params = this.settings.model;
 
 		let modelWidth = params.width * UnitSettings.size;
 		let modelHeight = params.height * UnitSettings.size;
 
 		let models = [];
+
 		let board = Scene.createShape(new PIXI.Rectangle(0, 0, modelWidth, modelHeight), params.backgroundColor);
 		board.name = `Scoreboard`;
 		models.push(board);
@@ -53,7 +47,6 @@ export default class Scoreboard extends Container {
 		this.shape = new IntersectHelper.Rectangle(this);
 	}
 
-	getModel () { return this.getChildByName('Scoreboard'); }
 	getText () { return this.getChildByName('Text'); }
 	updateScores (newScores) { this.getText().text = newScores; }
 

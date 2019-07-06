@@ -1,33 +1,25 @@
-import * as PIXI from 'pixi.js';
-import Colors from './Colors';
-import {Unit as UnitSettings} from './Settings';
-import Container from './base/Container';
-export default class Row extends Container {
+
+import RowModel from './model/Row';
+import RowCell from './RowCell';
+
+export default class Row {
 	constructor (row) {
-		super();
 		this.row = row;
-		this.name = 'Row';
+		this.cells = [];
 	}
 
-	drawCells () {
-		this.removeChildren();
-		let scene = this.parent.scene;
-		let testCard = scene.testCard;
-		let cells = [];
+	initModel (scene) {
+		this.model = new RowModel(this, scene);
+	}
+
+	createCells () {
 		for( let i = 0; i < this.row+1; i++ ) {
-			let cell = new PIXI.Graphics();
-			cell.lineStyle(1, Colors.black, 1);
-			cell.drawShape(new PIXI.RoundedRectangle(0, 0, testCard.width, testCard.height, testCard.width*0.1));
-			cell.name = `Cell`;
-			cell.row = this.row;
-			cell.index = i;
-			cell.x = i*(testCard.width+UnitSettings.margin);
-			cells.push(cell);
+			let cell = new RowCell(this.row, i);
+			this.cells.push(cell);
 		}
-		this.addChild(...cells);
 	}
 
 	getCell(index) {
-		return this.children.filter((child) => index == child.index)[0];
+		return this.cells[index];
 	}
 }

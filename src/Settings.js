@@ -42,6 +42,7 @@ export const Defaults = {
 	}, 
 	Button: {
 		model : {
+			name        : 'Button',
 			size        : 1/2,
 			textures    : {
 				main      : undefined,
@@ -50,41 +51,39 @@ export const Defaults = {
 		},
 	}, 
 	Scoreboard : {
-		name : `Scoreboard`,
 		attrs : {
 			scores : 0,
 		}, 
 		model : {
+			name   : `Scoreboard`,
 			width  : 1,
 			height  : 1,
 			fontColor : Colors.white,
 			backgroundColor : Colors.green,
-			textures : {
-				main: undefined,
-			},
+			texture : undefined,
 		}, 
 	}, 
 	ModalBox : {
-		name : `ModalBox`,
 		attrs : {
 			text : 'Some content of modal box',
 		}, 
 		model : {
-			width  : 512,
-			height  : 256,
-			fontColor : Colors.black,
+			name            : `ModalBox`,
+			width           : 512,
+			height          : 256,
+			fontColor       : Colors.black,
 			backgroundColor : Colors.white,
 		}, 
 	}, 
 	Dealer : {
-		name : `Dealer`,
 		attrs : {
 			scores : 0,
 		}, 
 		model : {
-			size: 1.5,
+			name      : `Dealer`,
+			size      : 1.5,
 			lineSize  : 8,
-			color  : Colors.white,
+			color     : Colors.white,
 		}, 
 	}, 
 };
