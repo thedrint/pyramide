@@ -1,5 +1,13 @@
  
- import * as PyramideCommands from './command/PyramideCommands';
+import * as PyramideCommands from './command/PyramideCommands';
+import Deck from './Deck';
+import Dealer from './Dealer';
+import Field from './Field';
+import Scoreboard from './Scoreboard';
+import DropZone from './DropZone';
+import Row from './Row';
+import RowCell from './RowCell';
+import CommandPool from './command/CommandPool';
 
 /**
  * Describe logic of Pyramide solitaire
@@ -10,22 +18,18 @@ export default class Pyramide {
 		this.app = scene.app;
 		this.game = this.app.game;
 		
-		this.deck = scene.deck;
 		this.cardRegistry = scene.cards;
+		this.deck = new Deck();
+		this.field = new Field();
+		this.dealer = new Dealer();
+		this.scoreboard = new Scoreboard();
+		this.drop = new DropZone();
 
-		this.field = [];
-		this.dealer = [];
-		this.slot = [];
 		this.maxRewinds = 2;
 		this.currentRewind = 0;
 
-		this.drop = [];
-		this.dropStack = [];
 		this.trash = [];
-		this.pool = [];
-
-		this.scores = 0;
-		// console.log(this.deck);
+		this.pool = new CommandPool();
 	}
 
 	initDecks(savedDeck = undefined) {
@@ -38,36 +42,23 @@ export default class Pyramide {
 		for( let card of tmpDeck ) 
 			this.cardRegistry.add(card);
 
-		this.field = [];
-		this.dealer = [];
-		this.slot = [];
+		// this.field.rows = [];
+		this.dealer.deck.clear();
+		this.dealer.slot.clear();
 		this.currentRewind = 0;
-		this.drop = [];
-		this.dropStack = [];
+		this.drop.cards.clear();
 		this.trash = [];
-		this.scores = 0;
-
-		let row = 0;
-		for (let i = 0; i < 28; i++) {
-			if (this.field[row] === undefined) this.field[row] = [];
-
-			let card = tmpDeck.shift();
-			this.field[row].push(card);
-
-			if (this.field[row].length >= row + 1) row++;
-		}
-
-		while( tmpDeck.length ) this.dealer.push(tmpDeck.shift());
-
-		console.log(this.field, this.dealer);
+		this.field.rows.forEach( row => {
+			row.cells.forEach( cell => cell.card = tmpDeck.shift() );
+		});
+		while( tmpDeck.length ) this.dealer.deck.push(tmpDeck.shift());
 	}
 
-	action (name, ...params) { return new PyramideCommands[name](this, name, ...params); }
+	action   (name, ...params) { return new PyramideCommands[`do${name}`](this, name, ...params); }
+	unaction (name, ...params) { return new PyramideCommands[`undo${name}`](this, name, ...params); }
 
-	doAction (action, ...params) {
-		let actionMethod = `do${action}`;
-		let com = this.pool.execute(this.action(actionMethod, ...params));
-		// this.gui.updateUndoButton();
+	doAction (name, ...params) {
+		let com = this.pool.execute(this.action(name, ...params));
 		this.trash.push(com);
 	}
 
@@ -76,134 +67,103 @@ export default class Pyramide {
 		let lastAction = this.trash.pop();
 
 		let {name, params} = lastAction;
-		let actionMethod = `undo${action}`;
-		this[actionMethod](...params);
-		// this.gui.updateUndoButton();
+		let com = this.pool.execute(this.unaction(name, ...params));
 	}
 
 	hasUndo () { return ( this.trash.length > 0 ); }
 
-	dropCard(card, from) {
+	dropCard(card) {
 		// Remove card from field
-		if( from.where === 'field' )
-			this.field[from.row][from.index] = undefined;
+		if( card.from() == 'field' ) {
+			this.field.getCell(card.attrs.row, card.attrs.index).removeCard();
+		}
 		// Or remove card from slot
-		else if( from.where === 'slot' )
-			this.slot.pop();
+		else
+			this.dealer.slot.pop();
 		// Add card to drop
-		this.drop.push({card: card, from: from});
-		this.scores += card.score;
-		this.gui.updateScoreboard();
+		this.drop.cards.push(card);
+		this.scoreboard.scores += card.score;
 	}
 
-	undropCard(card, from) {
-		if( from.where === 'slot' ) {
-			this.slot.push(card);
-			this.gui.showLastCardInSlot();
+	undropCard(card) {
+		if( card.from() == 'slot' ) {
+			this.dealer.slot.push(card);
 		}
-		else if (from.where === 'field' ) {
-			this.field[from.row][from.index] = card;
-			this.gui.showCardInField(card, from);
+		else {
+			this.field.getCell(card.attrs.row, card.attrs.index).card = card;
 		}
-
-		this.scores -= card.score;
-		this.gui.updateScoreboard();
+		this.scoreboard.scores -= card.score;
 	}
 
 	isFieldDeckEmpty () {
 		let emptyCardCnt = 0;
-		for (let row = 0; row < this.field.length; row++) {
-			for (let card of this.field[row]) {
-				if (card === undefined)
-					emptyCardCnt++;
-			}
-		}
-
+		this.field.rows.forEach( row => {
+			row.cells.forEach( cell => { if( !cell.card ) emptyCardCnt++; });
+		});
 		return ( emptyCardCnt === 28 );
 	}
 
-	fitCard (card, from) {
+	fitCard (card) {
 
-		let result = {
-			card: undefined,
-			from: undefined,
-		};
+		let result = undefined;
 
 		// Check this card is opened
-		if( !this.isCardOpened(from) )
+		if( !this.isCardOpened(card) )
 				return result;
 
 		// Search fittest card from field
 		// Check every row from behind
 		for( let row = 6;row >= 0; row--) {
 			// Already founded - exit
-			if( result.card !== undefined )
-				break;
-
+			if( result !== undefined ) break;
 			// Do not search on empty row
-			if( this.field[row] === [] )
-				continue;
+			if( this.field.getRow(row).empty() ) continue;
 
-			this.field[row].forEach( (curCard, i) => {
+			for( let cell of this.field.rows[row].cells ) {
 				// Already founded - exit
-				if( result.card !== undefined )
-					return;
+				if( result !== undefined ) break;
 				// Not search in dropped
-				if( curCard === undefined )
-					return;
+				if( cell.card === undefined ) continue;
 				// Do not fit card itself
-				if( from.row !== undefined && from.row === row && from.index === i )
-					return;
+				if( card.attrs.row !== undefined && card.attrs.row === cell.row && card.attrs.index === cell.index ) continue;
 
 				// Is this card ok?
-				if( (card.score + curCard.score) === 13 ) {
+				if( (card.score + cell.card.score) === 13 ) {
 					// Check if card opened
-					if( !this.isCardOpened({where:'field', row, index: i}) )
-						return;
-
+					if( !this.isCardOpened(cell.card) ) continue;
 					// console.log('Found fittest card', row, i);
-					result.card = curCard;
-					result.from = {where: 'field', row, index: i};
-				}
-			});
+					result = cell.card;
+					break;
+				}				
+			}
 		}
 
 		// If fit card in field not found - search in slot
-		if( from.where === 'field' && result.card === undefined ) {
-			// get card from slot for checking
-			let slotCard = this.slot.pop();
-			if( (slotCard !== undefined) && ( (slotCard.score + card.score) === 13 ) ) {
-				result.card = slotCard;
-				result.from = {where: 'slot'};
+		if( !result && card.from() === 'field' && this.dealer.slot.length ) {
+			let slotCard = this.dealer.slot[this.dealer.slot.length-1];
+			if( (slotCard.score + card.score) === 13 ) {
+				result = slotCard;
 				// console.log('Found fittest card in slot');
 			}
-			// Return card to slot after checking
-			this.slot.push(slotCard);
 		}
 
 		return result;
 	}
 
-	isCardOpened (from) {
-		// console.log('isCardOpened', from);
+	isCardOpened (card) {
+		let from = card.from(), row = card.attrs.row, index = card.attrs.index;
 		// Slot card always opened
-		if( from.where === 'slot' ) {
-			// console.log('Slot card is opened');
-			return true;
-		}
+		if( from === 'slot' ) return true;
 
 		// Check for next row neighbours (with current index and index+1)
-		if( from.where === 'field' ) {
-			let hasNextRowNeighbours = (
-				(this.field[from.row+1] !== undefined && this.field[from.row+1][from.index] !== undefined)
-				||
-				(this.field[from.row+1] !== undefined && this.field[from.row+1][from.index+1] !== undefined)
-			);
-
+		if( from === 'field' ) {
+			if( row == this.field.rows.length-1 ) return true;// Card from last row always opened
+			let nextRow = this.field.getRow(row+1);
+			let leftNeighbourCard  = nextRow.getCell(index).card;
+			let rightNeighbourCard = nextRow.getCell(index+1).card;
+			let hasNextRowNeighbours = ( leftNeighbourCard || rightNeighbourCard );
 			// console.log('Card ' + (hasNextRowNeighbours?'NOT':'is') + ' opened');
-
 			return !hasNextRowNeighbours;
 		}
 	}
-
 }

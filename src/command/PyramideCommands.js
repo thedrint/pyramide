@@ -2,97 +2,118 @@
 import Command from './Command';
 import Utils from './../Utils';
 
-export class doGetCardFromDealer {
+export class doGetCardFromDealerDeck extends Command {
 	run () {
-		let {gui} = this;
+		let logic = this.rec;
+		let {scene:gui, dealer} = logic;
 		// If Ddeck not empty
-		if (this.dealer.length) {
+		if( dealer.deck.length ) {
 			// Get card from Ddeck
-			let newCard = this.dealer.shift();
+			let newCard = dealer.deck.pop();
 			// And set it to Dslot
-			this.slot.push(newCard);
-			gui.showLastCardInSlot();
-			// Show empty Ddeck if no more cards there
-			if( this.dealer.length === 0 ) {
-				gui.showEmptyDealerDeck();
-			}
+			dealer.slot.push(newCard);
+			dealer.model.Slot.addChild(newCard.model);
+			newCard.model.showFace();
+			this.ended();
+			return true;
 		}
 		else {
-			if( this.currentRewind > this.maxRewinds-1 ) {
-				this.gui.showModal(this.i18n.t('You cannot rewind anymore!'));
+			if( logic.currentRewind > logic.maxRewinds-1 ) {
+				gui.showModal(logic.game.i18n.t('You cannot rewind anymore!'));
+				this.ended();
 				return false;
 			}
 			// Set all cards from Dslot to Ddeck
-			for( let card of this.slot ) {
-				this.dealer.push(card);
+			while( dealer.slot.length ) {
+				let card = dealer.slot.pop();
+				card.model.showShirt();
+				dealer.deck.push(card);
+				dealer.model.Deck.addChild(card.model);
 			}
-			// Clear slot;
-			this.slot = [];
-			gui.showEmptySlot();
 			this.currentRewind++;
-			// console.log('You rewind dealer deck!');
-			gui.showDealerDeckShirt();
+			console.log('You rewind dealer deck!');
+			this.ended();
+			return true;
 		}
 	}
 }
 
-export class undoGetCardFromDealer {
+export class undoGetCardFromDealerDeck extends Command {
 	run () {
-		let {gui} = this;
-		let lastSlotCard = this.slot.pop();
-		if( lastSlotCard ) {
-			this.dealer.unshift(lastSlotCard);
-			gui.showDealerDeckShirt();
-			gui.showLastCardInSlot();
+		let logic = this.rec;
+		let {scene:gui, dealer} = logic;
+		if( dealer.slot.length ) {
+			let lastSlotCard = dealer.slot.pop();
+			dealer.deck.push(lastSlotCard);
+			dealer.model.Deck.addChild(lastSlotCard.model);
+			lastSlotCard.model.showShirt();
+			this.ended();
+			return true;
 		}
 		// Slot empty, check if dealer deck was rewinded
 		else {
 			// DDeck is not rewinded yet
-			if( this.currentRewind === 0 ) {
+			if( logic.currentRewind === 0 ) {
+				this.ended();
 				return false;
 			}
 
 			// DDeck was rewinded, undo this
-			for( let card of this.dealer ) {
-				this.slot.push(card);
+			while( dealer.deck.length ) {
+				let card = dealer.deck.pop();
+				dealer.slot.push(card);
+				dealer.model.Slot.addChild(card.model);
+				card.model.showFace();
 			}
-
-			this.dealer = [];
-			gui.showEmptyDealerDeck();
-			this.currentRewind--;
-			gui.showLastCardInSlot();
+			logic.currentRewind--;
 		}
 	}
 }
 
-export class doDropCards {
-	run (arrayOfCards) {
-		for( let CardInfo of arrayOfCards )
-			this.dropCard(CardInfo.card, CardInfo.from);
-
-		this.dropStack.push(arrayOfCards);
+export class doDropCards extends Command {
+	run () {
+		console.log('doDropCards');
+		let logic = this.rec;
+		let {scene:gui} = logic;
+		let arrayOfCards = this.params;
+		for( let card of arrayOfCards ) {
+			logic.dropCard(card);
+		}
 
 		// Check game win
-		if( this.isFieldDeckEmpty() ) {
-			this.gui.showModal(this.i18n.t('You win a game!', {count: this.scores}));
+		if( logic.isFieldDeckEmpty() ) {
+			gui.showModal(logic.game.i18n.t('You win a game!', {count: logic.scoreboard.scores}));
 			//TODO: Win animation
 		}
+		this.ended();
+		return true;
 	}
 }
 
-export class undoDropCards {
+export class undoDropCards extends Command {
 	run () {
-		// Get cards from stack
-		let arrayOfCards = this.dropStack.pop();
-		// Mo more cards in stack
-		if( !arrayOfCards )
+		let logic = this.rec;
+		let {scene:gui} = logic;
+		let cards = this.params;
+		if( !logic.drop.cards.length ) {
+			this.failed();
 			return false;
-
-		for( let CardInfo of arrayOfCards ) {
-			// Get card from drop and return it to the place
-			let {card, from} = CardInfo;
-			this.undropCard(card, from);
 		}
+		// Remove cards from drop
+		let indexes = [];
+		for( let droppedCard of cards ) {
+			let index = logic.drop.cards.findIndex(card => {
+				return (card.attrs.row == droppedCard.attrs.row) && (card.attrs.index == droppedCard.attrs.index)
+			});
+			logic.drop.cards.splice(index,1);
+		}
+
+		for( let card of cards ) {
+			this.undropCard(card);
+		}
+
+		this.ended();
+		return true;
 	}
 }
 

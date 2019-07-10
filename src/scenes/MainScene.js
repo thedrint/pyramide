@@ -3,16 +3,15 @@ import * as PIXI from 'pixi.js';
 import IntersectHelper from './../IntersectHelper';
 
 import Vector from './../base/Vector';
+import MapManager from './../base/MapManager';
 import Utils from './../Utils';
 
 import Pyramide from './../Pyramide';
 
 import Colors from './../Colors';
 import Scene from './../Scene';
-import Field from "./../Field";
 import Row from "./../Row";
-import Deck from "./../Deck";
-import Dealer from './../Dealer';
+import DropZone from './../DropZone';
 import Card from './../Card';
 import CardManager from './../CardManager';
 import RegistryManager from './../RegistryManager';
@@ -53,7 +52,7 @@ export default class MainScene extends Scene {
 		// CoordiNet
 		this.drawCoords(50);
 		// Create Dealer
-		let dealer = this.initUnit(new Dealer(), new PIXI.Point(32, 32));
+		let dealer = this.initUnit(this.dealer, new PIXI.Point(32, 32));
 		this.drawUnit(dealer);
 		// Create Buttons
 		let buttons = [
@@ -67,17 +66,18 @@ export default class MainScene extends Scene {
 		buttons.forEach(b=>{
 			let button = this.initUnit(new Button(b), new PIXI.Point(this.app.screen.width - 64, bY));
 			this.drawUnit(button);
+			this.buttons.add(button);
 			bY += 64;
 		});
 		// Create Field
-		let field = this.initUnit(new Field());
+		let field = this.initUnit(this.field);
 		this.drawUnit(field, new PIXI.Point(0, UnitSettings.size/2));
 		this.drawField();
 		// Create Modal
-		let modal = this.initUnit(new ModalBox());
-		this.drawUnit(modal, new PIXI.Point(this.app.screen.width/2, this.app.screen.height/2));
+		this.modal = this.initUnit(new ModalBox());
+		this.drawUnit(this.modal, new PIXI.Point(this.app.screen.width/2, this.app.screen.height/2));
 		// Create Scoreboard
-		let scoreboard = this.initUnit(new Scoreboard(), new PIXI.Point(this.app.screen.width - 64, 64));
+		let scoreboard = this.initUnit(this.scoreboard, new PIXI.Point(this.app.screen.width - 64, 64));
 		this.drawUnit(scoreboard);
 		// Activate buttons
 		this.initButtonHandlers();
@@ -99,8 +99,16 @@ export default class MainScene extends Scene {
 		this.game = this.app.game;
 		this.cards = new CardManager(this);
 		this.registry = new RegistryManager(this);
-		this.deck = new Deck();
 		this.logic = new Pyramide(this);
+
+		this.deck = this.logic.deck;
+		this.dealer = this.logic.dealer;
+		this.field = this.logic.field;
+
+		this.buttons = new MapManager();
+		
+		this.scoreboard = this.logic.scoreboard;
+
 	}
 
 	initUnit (unitObject, spawn = undefined) {
@@ -123,132 +131,40 @@ export default class MainScene extends Scene {
 		return card;
 	}
 
-	drawHelpers () {
-		this.registry.forEach(v => this.drawBounds(v));
-	}
+	drawHelpers () { this.registry.forEach(v => this.drawBounds(v)); }
 
-	resetGui () {
-		this.showDealerDeckShirt();
-		// this.showEmptySlot();
-		this.updateScoreboard();
-		this.updateUndoButton();
-		// this.showModal(`Победа!\nВы набрали\n123 очка!`);
-		// this.showModal(`Количество перемоток колоды исчерпано!`);
-	}
-
-	getDealer () { return this.getChildByName('Dealer'); }
-	getButton (name) { return this.getChildByName(name); }
-	getField () { return this.getChildByName('Field'); }
-	getRow (row) { 
-		return this.getField().children.filter(child => {return child.name == 'Row' && child.logic.row == row})[0]; 
-	}
+	resetGui () {}
 
 	drawDecks () {
-		let {logic} = this;
-		let field = this.getField();
-		// Fill field with cards in rows
-		for( let row = 0; row < logic.field.length; row++ ) {
-			let cardRow = this.getRow(row);
-			for( let i = 0; i < logic.field[row].length; i++ ) {
-				let card = logic.field[row][i];
-				this.initUnit(card);
-				card.attrs.row = row;
-				card.attrs.index = i;
-				let cell = cardRow.logic.getCell(i);
-				cell.model.addChild(card.model);
-			}
-		}
-		// Show Ddeck shirt
-		this.showDealerDeckShirt();
-		this.updateScoreboard();
+		// Draw cards in F-cells
+		this.field.rows.forEach( row => {
+			row.cells.forEach( cell => {
+				this.initUnit(cell.card);
+				cell.model.addChild(cell.card.model);
+			});
+		});
+		// Draw cards in D-deck
+		this.dealer.deck.forEach( card => {
+			this.initUnit(card);
+			card.model.showShirt();
+			this.dealer.model.Deck.addChild(card.model);
+		});
 	}
 
 	drawField () {
-		let {logic} = this;
-		let fieldModel = this.getField();
-		fieldModel.removeChildren();
-		// Fill field with rows
-		for( let row = 0; row < 7; row++ ) {
-			let cardRow = new Row(row);
-			cardRow.initModel(this);
-			fieldModel.addChild(cardRow.model);
-			cardRow.createCells();
-			cardRow.model.drawCells();
-			cardRow.model.x = this.app.screen.width/2 - (this.cardSize.width+4)*(row+1)/2;
-			cardRow.model.y = row*this.cardSize.height/2;
-			cardRow.model.zIndex = row;
-		}
-
-		// let testCard = this.drawCard('sq', new PIXI.Point(0, 256));
-		// testCard.model.showShirt();
+		this.field.model.removeChildren();
+		this.field.rows.forEach( row => {
+			row.initModel(this);
+			this.field.model.addChild(row.model);
+			row.model.drawCells();
+			row.model.x = this.app.screen.width/2 - (this.cardSize.width+4)*(row.row+1)/2;
+			row.model.y = row.row*this.cardSize.height/2;
+			row.model.zIndex = row.row;
+		});
 	}
 
 	resizeWindowHandler () {
 		this.app.renderer.resize(document.innerWidth, document.innerHeight);
-		// this.fixCardsPosition();
-	}
-
-	fixCardsPosition () {
-		let {game, logic} = this;
-		let $field = this.getField();
-
-		let testCard = this.getDealer().Shirt;
-		let cardWidth = testCard.width;//Math.min($game.width(), $game.height()) / 4 * 0.6;
-		let cardHeight = testCard.height;// width * 1.5
-
-		// Correct position of cards and rows
-		$field.children.forEach( (cardRow) => {
-			let rowIndex = cardRow.row;
-			let zIndex = cardRow.zIndex;
-			cardRow.y = cardRow.zIndex * cardHeight/2;
-
-			let rowWidth = cardWidth * logic.field[rowIndex].length;
-			let rowLeftPos = parseInt(rowWidth) / 2;
-			cardRow.x = rowLeftPos;
-
-			cardRow.children.forEach( (card, index) => {
-				let cardIndex = card.attrs.index;
-				card.x = cardIndex*cardWidth;
-			});
-		});
-	}
-
-	showDealerDeckShirt() { this.getDealer().Shirt.visible = true; }
-
-	showCardInSlot(card) {
-		this.showEmptySlot();
-		let slot = this.getDealer().Slot;
-		slot.addChild(card);
-	}
-
-	showLastCardInSlot () {
-		let {game,logic} = this;
-		this.showEmptySlot();
-		let lastSlotCard = logic.slot.pop();
-		if( !lastSlotCard )
-			return true;
-
-		this.showCardInSlot(lastSlotCard);
-		logic.slot.push(lastSlotCard);
-	}
-
-	showCardInField (card, from) {
-		let field = this.getField();
-		card.attrs.row = from.row;
-		card.attrs.index = from.index;
-		let cardRow = this.getRow(from.row);
-		cardRow.addChild(card);
-
-		this.fixCardsPosition();
-	}
-
-	showEmptySlot () { this.getDealer().Slot.removeChildren(); }
-
-	showEmptyDealerDeck() {
-		//TODO: show something other, maybe red stop symbol or rewind symbol. Need correct svg for this
-		let $dealerDeck = $(this.q.ddeck);
-		$dealerDeck.find('.card').css('visibility', 'hidden');
-		this.getDealer().Shirt.visible = false;
 	}
 
 	dropCard (card, from) {
@@ -265,34 +181,20 @@ export default class MainScene extends Scene {
 		}
 	}
 
-	updateScoreboard () {
-		this.getChildByName('Scoreboard').text = this.logic.scores.toString().padStart(3, '0');
-	}
-
-	updateUndoButton () {
-		this.getButton('Undo').alpha = this.logic.hasUndo() ? 1 : 0.5;
-	}
-
-	showModal (text = undefined) {
-		let modal = this.getChildByName('ModalBox');
-		if( text )
-			modal.text = text;
-		modal.visible = true;
-	}
-	hideModal () { this.getChildByName('ModalBox').visible = false; }
-	toggleModal () { this.getChildByName('ModalBox').toggle(); }
+	updateUndoButton () { this.buttons.get('Undo').model.alpha = this.logic.hasUndo() ? 1 : 0.5; }
+	hideModal () { this.modal.model.visible = false; }
+	showModal (text = undefined) { if( text ) this.modal.model.text = text; this.modal.model.visible = true; }
 
 	startRound (savedDeck = undefined) {
 		this.resetGui();
 		this.logic.initDecks(savedDeck);
 		this.drawDecks();
-		this.updateUndoButton();
 		this.initHandlers();
 	}
 
 	initButtonHandlers () {
 		let {game} = this;
-		this.getButton('Fullscreen').off('click').on('click', () => {
+		this.buttons.get('Fullscreen').model.off('click').on('click', () => {
 			console.log('click!!!');
 			if( Functions.isInFullScreen() ) {
 				Functions.fullScreenCancel();
@@ -302,24 +204,24 @@ export default class MainScene extends Scene {
 			}
 
 		});
-		this.getButton('Undo').off('click').on('click', () => {
+		this.buttons.get('Undo').model.off('click').on('click', () => {
 				game.undoAction();
 				return true;
 		});
-		this.getButton('Help').off('click').on('click', () => {
-			if( !this.getChildByName('ModalBox').visible ) 
+		this.buttons.get('Help').model.off('click').on('click', () => {
+			if( !this.modal.model.visible ) 
 				this.showModal(game.i18n.t('Rules'));
 			else
 				this.hideModal();
 			return true;
 		});
 		// Start new game and restart current game buttons
-		this.getButton('StartGame').off('click').on('click', () => {
+		this.buttons.get('StartGame').model.off('click').on('click', () => {
 			this.startRound();
 			return true;
 		});
 		// Restart current round
-		this.getButton('RestartGame').off('click').on('click', () => {
+		this.buttons.get('RestartGame').model.off('click').on('click', () => {
 			let savedDeck = undefined;
 			let autosave = game.loadRound();
 			if( autosave ) 
@@ -330,50 +232,46 @@ export default class MainScene extends Scene {
 	}
 
 	initHandlers() {
-
-		let {game, logic} = this;
+		let {logic} = this;
 		// Resize hack
 		// window.removeEventListener('resize', this.resizeWindowHandlerHack)
 		// window.addEventListener('resize', this.resizeWindowHandlerHack);
 		
 		// Any card clicked
 		this.cards.forEach(card => {
-			console.log(card);
 			card.model.off('click').on('click', () => {
-				console.log('card clicked!!!');
-				return true;
 				let data = card.attrs;
 				if( card.isShirted )
 					return true;
 
-				let from = undefined;
-				if( card.attrs.row !== undefined )
-					from = {where: 'field', row: card.attrs.row, index: card.attrs.index};
-				else if( card.inSlot )
-					from = {where: 'slot'};
-
 				// If card is not opened - can't click on it
-				if( !logic.isCardOpened(from) )
+				if( !logic.isCardOpened(card) ) {
+					console.log(`Card isn't opened`);
 					return true;
+				}
 
-				//console.log(`Card is opened, let's find pair and drop it`);
+				console.log(`Card is opened, let's find pair and drop it`);
 				if( card.score === 13 ) {
-					logic.doAction('DropCards', [{card, from}]);
-					this.dropCard(card, from);
+					logic.pool.add(logic.action('DropCards', card));
+					// logic.dropCard(card);
+					return true;
 				}
 				else {
-					let fitCard = logic.fitCard(card, from);
-					if( fitCard.card !== undefined ) {
-						logic.doAction('DropCards', [{card: fitCard.card, from: fitCard.from}, {card, from}]);
-						this.dropCard(fitCard.card, fitCard.from);
-						this.dropCard(card, from);
+					let fitCard = logic.fitCard(card);
+					if( fitCard ) {
+						console.log(`Found fit card`, fitCard);
+						logic.pool.add(logic.action('DropCards', fitCard, card));
+						// logic.dropCard(fitCard);
+						// logic.dropCard(card);
+						return true;
 					}
 				}
 			});
 		})
 
-		this.getDealer().off('click').on('click', () => {
-			logic.doAction('GetCardFromDealer');
+		this.dealer.model.Deck.off('click').on('click', () => {
+			console.log(`GetCardFromDealer clicked!`);
+			logic.pool.add(logic.action('GetCardFromDealerDeck'));
 		});
 	}
 

@@ -4,7 +4,7 @@ import Colors from './Colors';
 
 export const Application = {
 	width: 800,
-	height: 600,
+	height: 650,
 	autoStart: false, 
 	autoResize: true,
 	backgroundColor: Colors.breeze,
@@ -84,6 +84,13 @@ export const Defaults = {
 			size      : 1.5,
 			lineSize  : 8,
 			color     : Colors.white,
+		}, 
+	}, 
+	DropZone : {
+		model : {
+			name      : `DropZone`,
+			lineSize  : 1,
+			color     : Colors.black,
 		}, 
 	}, 
 };

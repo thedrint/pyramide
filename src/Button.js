@@ -6,6 +6,7 @@ import ButtonModel from './model/Button';
 export default class Button {
 	constructor (settings = Defaults.Button) {
 		this.settings = Utils.cleanOptionsObject(settings, Defaults.Button);
+		this.name = this.settings.model.name;
 	}
 
 	initModel (scene) {

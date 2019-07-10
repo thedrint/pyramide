@@ -6,6 +6,7 @@ export default class Row {
 	constructor (row) {
 		this.row = row;
 		this.cells = [];
+		this.createCells();
 	}
 
 	initModel (scene) {
@@ -21,5 +22,19 @@ export default class Row {
 
 	getCell(index) {
 		return this.cells[index];
+	}
+
+	addCard (card) {
+		for( let cell of this.cells ) {
+			if( cell.card ) continue;
+			cell.addCard(card);
+			return true;
+		}
+		return false;
+	}
+
+	empty () {
+		let emptyCells = this.cells.reduce( (a,c) => { return a + parseInt(!c.card) }, 0);
+		return emptyCells == this.cells.length;
 	}
 }

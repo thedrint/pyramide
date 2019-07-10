@@ -1,15 +1,18 @@
 
+import IEventEmitter from './base/IEventEmitter';
+
 import Utils from './Utils';
 import Deck from './Deck';
 
 import { Defaults } from './Settings';
 import CardModel from './model/Card';
 
-export default class Card {
+export default class Card extends IEventEmitter {
 	/**
 	 * @param suitrank (s10 for spade ten, for example)
 	 */
 	constructor (suitrank, settings = Defaults.Card) {
+		super();
 		this.settings = Utils.cleanOptionsObject(settings, Defaults.Card);
 
 		suitrank = suitrank.toString().toLowerCase();
@@ -37,6 +40,7 @@ export default class Card {
 	get isShirted () { return this.model.shirt.visible; }
 	get inSlot () { return this.attrs.slot; }
 	isOpened (from) { return this.scene.app.game.isCardOpened(from); }
+	from () { return ( this.attrs.row && this.attrs.index ) ? 'field' : 'slot'; }
 
 	get symbol () { return Deck.getCardSymbol(this.suit, this.rank); }
 
