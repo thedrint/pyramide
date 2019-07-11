@@ -15,6 +15,7 @@ import DropZone from './../DropZone';
 import Card from './../Card';
 import CardManager from './../CardManager';
 import RegistryManager from './../RegistryManager';
+import CommandPool from './../command/CommandPool';
 
 import Scoreboard from './../Scoreboard';
 import Button from './../Button';
@@ -29,7 +30,6 @@ import Functions from "./../utils/Functions";
 import ShirtModel from './../model/Shirt';
 
 export default class MainScene extends Scene {
-
 	constructor (name, options = {}) {
 		super(name, options);
 		this.sortableChildren = true;
@@ -50,10 +50,10 @@ export default class MainScene extends Scene {
 		let table = new PIXI.TilingSprite(this.app.textures.Table, this.app.screen.width, this.app.screen.height);
 		this.addChild(table);
 		// CoordiNet
-		this.drawCoords(50);
+		// this.drawCoords(50);
 		// Create Dealer
-		let dealer = this.initUnit(this.dealer, new PIXI.Point(32, 32));
-		this.drawUnit(dealer);
+		this.initUnit(this.dealer, new PIXI.Point(32, 32));
+		this.drawUnit(this.dealer);
 		// Create Buttons
 		let buttons = [
 			{model:{name:'Undo',textures:{main:this.app.textures.Undo}}},
@@ -70,24 +70,26 @@ export default class MainScene extends Scene {
 			bY += 64;
 		});
 		// Create Field
-		let field = this.initUnit(this.field);
-		this.drawUnit(field, new PIXI.Point(0, UnitSettings.size/2));
+		this.initUnit(this.field);
+		this.drawUnit(this.field, new PIXI.Point(0, UnitSettings.size/2));
 		this.drawField();
 		// Create Modal
 		this.modal = this.initUnit(new ModalBox());
 		this.drawUnit(this.modal, new PIXI.Point(this.app.screen.width/2, this.app.screen.height/2));
 		// Create Scoreboard
-		let scoreboard = this.initUnit(this.scoreboard, new PIXI.Point(this.app.screen.width - 64, 64));
-		this.drawUnit(scoreboard);
+		this.initUnit(this.scoreboard, new PIXI.Point(this.app.screen.width - 64, 64));
+		this.drawUnit(this.scoreboard);
+		// Create DropZone
+		this.initUnit(this.drop, new PIXI.Point(0, this.app.screen.height));
+		this.drawUnit(this.drop);
 		// Activate buttons
 		this.initButtonHandlers();
 	}
 
 	// Main update loop of scene
 	update () {
-		if( this.logic.pool.length ) {
-			let com = this.logic.pool.execute();
-			this.logic.trash.add(com);
+		if( this.pool.length ) {
+			let com = this.pool.execute();
 		}
 	}
 
@@ -96,19 +98,21 @@ export default class MainScene extends Scene {
 	 * @return none
 	 */
 	initGameObjects () {
-		this.game = this.app.game;
-		this.cards = new CardManager(this);
-		this.registry = new RegistryManager(this);
-		this.logic = new Pyramide(this);
+		this.game       = this.app.game;
 
-		this.deck = this.logic.deck;
-		this.dealer = this.logic.dealer;
-		this.field = this.logic.field;
+		this.cards      = new CardManager(this);
+		this.registry   = new RegistryManager(this);
+		this.logic      = new Pyramide(this);
 
-		this.buttons = new MapManager();
-		
+		this.deck       = this.logic.deck;
+		this.dealer     = this.logic.dealer;
+		this.field      = this.logic.field;
+		this.pool       = this.logic.pool;
 		this.scoreboard = this.logic.scoreboard;
+		this.drop       = this.logic.drop;
 
+		this.buttons    = new MapManager();
+		this.animation  = new CommandPool();// Special pool for animations
 	}
 
 	initUnit (unitObject, spawn = undefined) {
@@ -173,15 +177,15 @@ export default class MainScene extends Scene {
 		card.visible = false;//$card.parent().find($card).remove();
 		// If remove from slot - check slot not empty and restore last card from slot
 		if( from.where === 'slot' ) {
-			let slotCard = logic.slot.pop();
+			let slotCard = this.dealer.slot.pop();
 			if( slotCard !== undefined ) {
 				this.showCardInSlot(slotCard);
-				logic.slot.push(slotCard);
+				this.dealer.slot.add(slotCard);
 			}
 		}
 	}
 
-	updateUndoButton () { this.buttons.get('Undo').model.alpha = this.logic.hasUndo() ? 1 : 0.5; }
+	updateUndoButton () { this.buttons.get('Undo').model.alpha = this.pool.hasUndo() ? 1 : 0.5; }
 	hideModal () { this.modal.model.visible = false; }
 	showModal (text = undefined) { if( text ) this.modal.model.text = text; this.modal.model.visible = true; }
 
@@ -193,9 +197,9 @@ export default class MainScene extends Scene {
 	}
 
 	initButtonHandlers () {
-		let {game} = this;
+		let {game,logic} = this;
 		this.buttons.get('Fullscreen').model.off('click').on('click', () => {
-			console.log('click!!!');
+			// console.log('click!!!');
 			if( Functions.isInFullScreen() ) {
 				Functions.fullScreenCancel();
 			}
@@ -205,7 +209,7 @@ export default class MainScene extends Scene {
 
 		});
 		this.buttons.get('Undo').model.off('click').on('click', () => {
-				game.undoAction();
+				this.pool.undo();
 				return true;
 		});
 		this.buttons.get('Help').model.off('click').on('click', () => {
@@ -240,18 +244,18 @@ export default class MainScene extends Scene {
 		// Any card clicked
 		this.cards.forEach(card => {
 			card.model.off('click').on('click', () => {
-				let data = card.attrs;
 				if( card.isShirted )
 					return true;
 
 				// If card is not opened - can't click on it
-				if( !logic.isCardOpened(card) ) {
-					console.log(`Card isn't opened`);
+				if( !card.isOpened ) {
+					// console.log(`Card isn't opened`);
 					return true;
 				}
 
-				console.log(`Card is opened, let's find pair and drop it`);
+				// console.log(`Card is opened, let's find pair and drop it`);
 				if( card.score === 13 ) {
+					// console.log(`This card is a king`);
 					logic.pool.add(logic.action('DropCards', card));
 					// logic.dropCard(card);
 					return true;
@@ -259,19 +263,25 @@ export default class MainScene extends Scene {
 				else {
 					let fitCard = logic.fitCard(card);
 					if( fitCard ) {
-						console.log(`Found fit card`, fitCard);
+						// console.log(`Found fit card`, fitCard);
 						logic.pool.add(logic.action('DropCards', fitCard, card));
-						// logic.dropCard(fitCard);
-						// logic.dropCard(card);
-						return true;
+					}
+					else {
+						// console.log(`No fit card for ${card.name}`);
 					}
 				}
+				return true;
 			});
 		})
 
 		this.dealer.model.Deck.off('click').on('click', () => {
-			console.log(`GetCardFromDealer clicked!`);
+			// console.log(`GetCardFromDealerDeck clicked!`);
 			logic.pool.add(logic.action('GetCardFromDealerDeck'));
+			return true;
+		});
+
+		this.modal.model.off('click').on('click', () => {
+			this.hideModal();
 		});
 	}
 

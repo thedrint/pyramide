@@ -1,9 +1,12 @@
 
+import IEventEmitter from './base/IEventEmitter';
+
 import Row from './Row';
 import FieldModel from './model/Field';
 
-export default class Field {
+export default class Field extends IEventEmitter {
 	constructor () {
+		super();
 		// this.settings = Utils.cleanOptionsObject(settings, Defaults.Field);
 		this.rows = new Array();
 		this.createRows();

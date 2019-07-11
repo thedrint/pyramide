@@ -26,7 +26,8 @@ export default class ModalBoxModel extends Container {
 
 		let models = [];
 
-		let background = Scene.createShape(new PIXI.RoundedRectangle(0, 0, modalWidth, modalHeight, modalWidth*0.1), params.backgroundColor);
+		let geometry = new PIXI.RoundedRectangle(0, 0, modalWidth, modalHeight, modalWidth*0.1);
+		let background = Scene.createShape(geometry, params.backgroundColor);
 		background.name = `Background`;
 		models.push(background);
 
@@ -56,6 +57,10 @@ export default class ModalBoxModel extends Container {
 		text.y = modalHeight/2;
 		this.pivot.x += 0.5 * modalWidth;
 		this.pivot.y += 0.5 * modalHeight;
+
+		this.interactive = true;
+		this.buttonMode = true;
+		this.hitArea = geometry;
 	}
 
 	toggle       () { this.visible = !this.visible; }

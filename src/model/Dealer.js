@@ -14,6 +14,8 @@ export default class DealerModel extends Container {
 		this.logic = logic;
 		this.scene = scene;
 		this.name = this.settings.model.name;
+		this.interactive = true;
+		this.interactiveChildren = true;
 		this.init();
 	}
 
@@ -23,6 +25,7 @@ export default class DealerModel extends Container {
 		// console.log(this.scene.cardSize);
 		let modelWidth = this.scene.cardSize.width;
 		let modelHeight = this.scene.cardSize.height;
+		let geometry = new PIXI.RoundedRectangle(0, 0, modelWidth, modelHeight, params.lineSize);
 
 		// let shirt = new ShirtModel();
 		// models.push(shirt);
@@ -30,20 +33,25 @@ export default class DealerModel extends Container {
 		let deck = new PIXI.Graphics();
 		deck.clear();
 		deck.lineStyle(params.lineSize, params.color);
-		deck.drawShape(new PIXI.RoundedRectangle(0, 0, modelWidth, modelHeight, params.lineSize));
+		deck.drawShape(geometry);
+		deck.hitArea = geometry;
 		deck.name = `Deck`;
 		deck.interactive = true;
+		deck.buttonMode = true;
 		models.push(deck);
 
 		let slot = new PIXI.Graphics();
 		slot.clear();
 		slot.lineStyle(params.lineSize, params.color);
-		slot.drawShape(new PIXI.RoundedRectangle(modelWidth + UnitSettings.margin, 0, modelWidth, modelHeight, params.lineSize));
+		slot.drawShape(geometry);
+		slot.hitArea = geometry;
 		slot.name = `Slot`;
 		slot.interactive = true;
+		slot.buttonMode = true;
 		models.push(slot);
 
 		this.addChild(...models);
+		slot.x = modelWidth + UnitSettings.margin;
 	}
 
 	// get Shirt () { return this.getChildByName('Shirt'); }

@@ -11,7 +11,7 @@ export class doGetCardFromDealerDeck extends Command {
 			// Get card from Ddeck
 			let newCard = dealer.deck.pop();
 			// And set it to Dslot
-			dealer.slot.push(newCard);
+			dealer.slot.add(newCard);
 			dealer.model.Slot.addChild(newCard.model);
 			newCard.model.showFace();
 			this.ended();
@@ -27,11 +27,11 @@ export class doGetCardFromDealerDeck extends Command {
 			while( dealer.slot.length ) {
 				let card = dealer.slot.pop();
 				card.model.showShirt();
-				dealer.deck.push(card);
+				dealer.deck.add(card);
 				dealer.model.Deck.addChild(card.model);
 			}
-			this.currentRewind++;
-			console.log('You rewind dealer deck!');
+			logic.currentRewind++;
+			// console.log(`You rewind dealer deck! You rewinded deck ${logic.currentRewind} times`);
 			this.ended();
 			return true;
 		}
@@ -44,7 +44,7 @@ export class undoGetCardFromDealerDeck extends Command {
 		let {scene:gui, dealer} = logic;
 		if( dealer.slot.length ) {
 			let lastSlotCard = dealer.slot.pop();
-			dealer.deck.push(lastSlotCard);
+			dealer.deck.add(lastSlotCard);
 			dealer.model.Deck.addChild(lastSlotCard.model);
 			lastSlotCard.model.showShirt();
 			this.ended();
@@ -54,6 +54,7 @@ export class undoGetCardFromDealerDeck extends Command {
 		else {
 			// DDeck is not rewinded yet
 			if( logic.currentRewind === 0 ) {
+				// console.log(`You unrewind deck to initial position`);
 				this.ended();
 				return false;
 			}
@@ -61,28 +62,31 @@ export class undoGetCardFromDealerDeck extends Command {
 			// DDeck was rewinded, undo this
 			while( dealer.deck.length ) {
 				let card = dealer.deck.pop();
-				dealer.slot.push(card);
+				dealer.slot.add(card);
 				dealer.model.Slot.addChild(card.model);
 				card.model.showFace();
 			}
 			logic.currentRewind--;
+			this.ended();
+			return true;
 		}
 	}
 }
 
 export class doDropCards extends Command {
 	run () {
-		console.log('doDropCards');
+		// console.log('doDropCards');
 		let logic = this.rec;
 		let {scene:gui} = logic;
 		let arrayOfCards = this.params;
 		for( let card of arrayOfCards ) {
 			logic.dropCard(card);
+			gui.drop.model.addChild(card.model);
 		}
 
 		// Check game win
 		if( logic.isFieldDeckEmpty() ) {
-			gui.showModal(logic.game.i18n.t('You win a game!', {count: logic.scoreboard.scores}));
+			gui.showModal(logic.game.i18n.t('You win a game!', {scores: logic.scoreboard.scores}));
 			//TODO: Win animation
 		}
 		this.ended();
@@ -103,13 +107,17 @@ export class undoDropCards extends Command {
 		let indexes = [];
 		for( let droppedCard of cards ) {
 			let index = logic.drop.cards.findIndex(card => {
-				return (card.attrs.row == droppedCard.attrs.row) && (card.attrs.index == droppedCard.attrs.index)
+				return (card.row == droppedCard.row) && (card.index == droppedCard.index)
 			});
 			logic.drop.cards.splice(index,1);
 		}
 
 		for( let card of cards ) {
-			this.undropCard(card);
+			logic.undropCard(card);
+			if( card.from == 'field' )
+				gui.field.getCell(card.row, card.index).model.addChild(card.model);
+			else
+				gui.dealer.model.Slot.addChild(card.model);
 		}
 
 		this.ended();

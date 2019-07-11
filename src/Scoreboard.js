@@ -1,11 +1,14 @@
 
+import IEventEmitter from './base/IEventEmitter';
+
 import { Defaults } from './Settings';
 import Utils from './Utils';
 import ScoreboardModel from './model/Scoreboard';
 
-export default class Scoreboard {
+export default class Scoreboard extends IEventEmitter {
 
 	constructor (settings = Defaults.Scoreboard) {
+		super();
 		this.settings = Utils.cleanOptionsObject(settings, Defaults.Scoreboard);
 		this._scores = parseInt(this.settings.attrs.scores);
 	}

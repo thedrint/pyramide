@@ -452,6 +452,10 @@ export default class Utils {
 		return [...Array(size).keys()].map(i => i + start);
 	}
 
+	static getKeyByValue (object, value) {
+		return Object.keys(object).find(key => object[key] === value);
+	}
+
 	/**
 	 * Make from flat array new array of coordinate objects
 	 * Each letters in dimensions is a one dimension. 'xy' represents 2d, 'xyz' represents 3d coordinates

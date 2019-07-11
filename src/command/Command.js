@@ -9,12 +9,13 @@ export default class Command {
 			FAIL    : 'FAIL',
 		};
 	}
-	constructor (receiver, name, ...params) {
+	constructor (receiver, name, undo = undefined, ...params) {
 		this.rec    = receiver;// Who executes command, receiver, recipient
 		this.name   = name;// Command name
 		this.params = params;// array of params
 		this.result = undefined;// result of command
 		this.state  = undefined;// current state of command
+		this.undo   = undo;// Command for undo this command
 		this.started();
 	}
 

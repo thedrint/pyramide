@@ -1,8 +1,11 @@
 
+import IEventEmitter from './base/IEventEmitter';
+
 import RowCellModel from './model/RowCell';
 
-export default class RowCell {
+export default class RowCell extends IEventEmitter {
 	constructor (row, index) {
+		super();
 		this.row = row;
 		this.index = index;
 		this._card = undefined;
@@ -19,13 +22,16 @@ export default class RowCell {
 			this.removeCard();
 		else {
 			this._card = card;
-			card.attrs.row = this.row;
-			card.attrs.index = this.index;
+			card.row   = this.row;
+			card.index = this.index;
+			card.from  = 'field';
+			card.where = 'field';
 		}
 	}
 
 	removeCard () {
 		let card = this.card;
+		// card.where = undefined;
 		card.emit('removeFromCell', card);
 		this._card = undefined;
 		return card;

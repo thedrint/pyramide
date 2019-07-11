@@ -2,8 +2,17 @@
 import ArrayManager from './base/ArrayManager';
 
 export default class DropManager extends ArrayManager {
-	push (card) {
-		super.push(card);
-		card.emit('dropped', card);
+	add (...cards) {
+		super.add(...cards);
+		[...cards].forEach( card => {
+			card.where = 'drop';
+			card.emit('dropped', card);
+		});
+		return this.length;
+	}
+	pop () {
+		let card = super.pop();
+		card.where = undefined;
+		return card;
 	}
 }

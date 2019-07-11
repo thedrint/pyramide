@@ -1,9 +1,12 @@
 
+import IEventEmitter from './base/IEventEmitter';
+
 import RowModel from './model/Row';
 import RowCell from './RowCell';
 
-export default class Row {
+export default class Row extends IEventEmitter {
 	constructor (row) {
+		super();
 		this.row = row;
 		this.cells = [];
 		this.createCells();

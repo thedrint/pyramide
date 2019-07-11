@@ -1,5 +1,7 @@
  
 import * as PyramideCommands from './command/PyramideCommands';
+import { Game as GameSettings } from './Settings';
+import Card from './Card';
 import Deck from './Deck';
 import Dealer from './Dealer';
 import Field from './Field';
@@ -18,79 +20,79 @@ export default class Pyramide {
 		this.app = scene.app;
 		this.game = this.app.game;
 		
-		this.cardRegistry = scene.cards;
+		this.cards = scene.cards;
 		this.deck = new Deck();
 		this.field = new Field();
 		this.dealer = new Dealer();
 		this.scoreboard = new Scoreboard();
 		this.drop = new DropZone();
-
-		this.maxRewinds = 2;
-		this.currentRewind = 0;
-
-		this.trash = [];
 		this.pool = new CommandPool();
+
+		this.maxRewinds = GameSettings.maxRewind;
+		this.currentRewind = 0;
 	}
 
 	initDecks(savedDeck = undefined) {
+		// Reset
+		this.cards.clear();
+		this.dealer.deck.clear();
+		this.dealer.slot.clear();
+		this.drop.cards.clear();
+		this.pool.clear();
+		this.pool.trash.clear();
+		this.currentRewind = 0;
 		// get card deck, new random, or predefined from saveDeck
 		let tmpDeck = this.deck.getCards(savedDeck);
 		// save it to storage
 		this.game.saveRound({deck:this.deck.getCardsNamesArray(tmpDeck)});
-		// Reset cardRegistry
-		this.cardRegistry.clear();
-		for( let card of tmpDeck ) 
-			this.cardRegistry.add(card);
-
-		// this.field.rows = [];
-		this.dealer.deck.clear();
-		this.dealer.slot.clear();
-		this.currentRewind = 0;
-		this.drop.cards.clear();
-		this.trash = [];
+		tmpDeck.forEach( card => {
+			card.initLogic(this);
+			this.cards.add(card);
+		});
 		this.field.rows.forEach( row => {
 			row.cells.forEach( cell => cell.card = tmpDeck.shift() );
 		});
-		while( tmpDeck.length ) this.dealer.deck.push(tmpDeck.shift());
+		while( tmpDeck.length ) this.dealer.deck.add(tmpDeck.shift());
 	}
 
-	action   (name, ...params) { return new PyramideCommands[`do${name}`](this, name, ...params); }
-	unaction (name, ...params) { return new PyramideCommands[`undo${name}`](this, name, ...params); }
+	action   (name, ...params) { 
+		return new PyramideCommands[`do${name}`](this, name, PyramideCommands[`undo${name}`], ...params); 
+	}
+	unaction (name, ...params) { 
+		return new PyramideCommands[`undo${name}`](this, name, ...params); 
+	}
 
 	doAction (name, ...params) {
-		let com = this.pool.execute(this.action(name, ...params));
-		this.trash.push(com);
+		this.pool.add(this.action(name, ...params));
 	}
 
 	undoAction () {
 		if( !this.hasUndo() ) return false;
-		let lastAction = this.trash.pop();
-
-		let {name, params} = lastAction;
-		let com = this.pool.execute(this.unaction(name, ...params));
+		let {name, params} = this.pool.trash.pop();
+		this.pool.add(this.unaction(name, ...params));
 	}
 
-	hasUndo () { return ( this.trash.length > 0 ); }
+	hasUndo () { return this.pool.hasUndo(); }
 
 	dropCard(card) {
 		// Remove card from field
-		if( card.from() == 'field' ) {
-			this.field.getCell(card.attrs.row, card.attrs.index).removeCard();
+		if( card.from == 'field' ) {
+			this.field.getCell(card.row, card.index).removeCard();
 		}
 		// Or remove card from slot
 		else
 			this.dealer.slot.pop();
 		// Add card to drop
-		this.drop.cards.push(card);
+		this.drop.cards.add(card);
 		this.scoreboard.scores += card.score;
 	}
 
 	undropCard(card) {
-		if( card.from() == 'slot' ) {
-			this.dealer.slot.push(card);
+		if( card.from == 'field' ) {
+			this.field.getCell(card.row, card.index).card = card;
 		}
 		else {
-			this.field.getCell(card.attrs.row, card.attrs.index).card = card;
+			this.dealer.slot.add(card);
 		}
 		this.scoreboard.scores -= card.score;
 	}
@@ -104,66 +106,34 @@ export default class Pyramide {
 	}
 
 	fitCard (card) {
-
-		let result = undefined;
-
-		// Check this card is opened
-		if( !this.isCardOpened(card) )
-				return result;
-
-		// Search fittest card from field
-		// Check every row from behind
-		for( let row = 6;row >= 0; row--) {
-			// Already founded - exit
-			if( result !== undefined ) break;
-			// Do not search on empty row
-			if( this.field.getRow(row).empty() ) continue;
-
-			for( let cell of this.field.rows[row].cells ) {
-				// Already founded - exit
-				if( result !== undefined ) break;
-				// Not search in dropped
-				if( cell.card === undefined ) continue;
-				// Do not fit card itself
-				if( card.attrs.row !== undefined && card.attrs.row === cell.row && card.attrs.index === cell.index ) continue;
-
-				// Is this card ok?
-				if( (card.score + cell.card.score) === 13 ) {
-					// Check if card opened
-					if( !this.isCardOpened(cell.card) ) continue;
-					// console.log('Found fittest card', row, i);
-					result = cell.card;
-					break;
-				}				
-			}
+		// Fit by rank
+		let fitRank = Card.getRankByScore(13 - card.score);
+		// Search all possible suits of fit rank - max 4 iterations
+		for( let fitSuit in Card.suitmap ) {
+			let fitCard = this.cards.get(`${fitSuit}${fitRank}`);
+			if( fitCard.isOpened ) return fitCard;// If first possible card opened - we can return
+			//TODO: improve, must return all possible fit cards, not only first
 		}
-
-		// If fit card in field not found - search in slot
-		if( !result && card.from() === 'field' && this.dealer.slot.length ) {
-			let slotCard = this.dealer.slot[this.dealer.slot.length-1];
-			if( (slotCard.score + card.score) === 13 ) {
-				result = slotCard;
-				// console.log('Found fittest card in slot');
-			}
-		}
-
-		return result;
+		return false;
 	}
 
 	isCardOpened (card) {
-		let from = card.from(), row = card.attrs.row, index = card.attrs.index;
-		// Slot card always opened
-		if( from === 'slot' ) return true;
-
+		// console.log(`isCardOpened`, card.name, card.where, card.row, card.index);
+		// Slot card always opened if on top of stack
+		if( card.where == 'slot' ) {
+			let cardIndex = this.dealer.slot.findIndex( slotCard => {return slotCard.name == card.name});
+			return ( cardIndex == this.dealer.slot.length-1 );
+		}
 		// Check for next row neighbours (with current index and index+1)
-		if( from === 'field' ) {
-			if( row == this.field.rows.length-1 ) return true;// Card from last row always opened
-			let nextRow = this.field.getRow(row+1);
-			let leftNeighbourCard  = nextRow.getCell(index).card;
-			let rightNeighbourCard = nextRow.getCell(index+1).card;
+		if( card.where == 'field' ) {
+			if( card.row == this.field.rows.length-1 ) return true;// Card from last row always opened
+			let nextRow = this.field.getRow(card.row+1);
+			let leftNeighbourCard  = nextRow.getCell(card.index).card;
+			let rightNeighbourCard = nextRow.getCell(card.index+1).card;
 			let hasNextRowNeighbours = ( leftNeighbourCard || rightNeighbourCard );
 			// console.log('Card ' + (hasNextRowNeighbours?'NOT':'is') + ' opened');
 			return !hasNextRowNeighbours;
 		}
+		return false;
 	}
 }
