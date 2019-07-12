@@ -55,23 +55,13 @@ export default class Pyramide {
 		while( tmpDeck.length ) this.dealer.deck.add(tmpDeck.shift());
 	}
 
-	action   (name, ...params) { 
-		return new PyramideCommands[`do${name}`](this, name, PyramideCommands[`undo${name}`], ...params); 
+	action   (name, ...params) { return new PyramideCommands[`do${name}`](this, name, ...params); }
+	unaction (name, ...params) { return new PyramideCommands[`undo${name}`](this, name, ...params); }
+	command  (name, ...params) {
+		let com = this.action(name, ...params);
+		com.undo = this.unaction(name, ...params);
+		return com;
 	}
-	unaction (name, ...params) { 
-		return new PyramideCommands[`undo${name}`](this, name, ...params); 
-	}
-
-	doAction (name, ...params) {
-		this.pool.add(this.action(name, ...params));
-	}
-
-	undoAction () {
-		if( !this.hasUndo() ) return false;
-		let {name, params} = this.pool.trash.pop();
-		this.pool.add(this.unaction(name, ...params));
-	}
-
 	hasUndo () { return this.pool.hasUndo(); }
 
 	dropCard(card) {

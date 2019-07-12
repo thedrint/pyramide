@@ -1,4 +1,5 @@
 
+import * as TWEEN from 'es6-tween';
 import Command from './Command';
 import Utils from './../Utils';
 
@@ -125,12 +126,41 @@ export class undoDropCards extends Command {
 	}
 }
 
-export class FollowTo extends Command {
+export class AnimationMove extends Command {
+	constructor (receiver, name, undo = undefined, ...params) {
+		super(receiver, name, undo, ...params);
+		let [card, target, duration = 1000] = this.params;
+		this.card = card;
+		this.target = target;
+		this.duration = duration;
+		this.logic = this.rec;
+		this.moving = undefined;
+		this.start = this.card.model.toGlobal(this.card.model);
+		this.end = this.target.model.toGlobal(this.target.model);
+	}
+	pre () { return !this.moving; }
 	run () {
-		let [enemy] = this.params;
-		let result = this.rec.followTo(enemy);
-		if( this.rec.sensor.isEnemyNear(enemy) ) 
-			this.ended();
+		let {scene:gui} = this.logic;
+		gui.addChild(this.card.model);
+		this.card.model.x = this.start.x;
+		this.card.model.y = this.start.y;
+
+		this.moving = new TWEEN.Tween(this.start).to(this.end, this.duration)
+			.easing(TWEEN.Easing.Linear.None)
+			.on('update', (pos) => {
+				this.card.model.x = pos.x;
+				this.card.model.y = pos.y;
+			})
+			.on('complete', () => {
+				console.log('Moving complete');
+				this.moving = false;
+				this.target.model.addChild(this.card.model);
+				this.ended();
+			})
+			.start();
+		return this.moving;
+
+		if( this.card.model.moveTo(this.target.model) ) this.ended();
 		return result;
 	}
 }

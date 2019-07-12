@@ -72,7 +72,6 @@ export default class MainScene extends Scene {
 		// Create Field
 		this.initUnit(this.field);
 		this.drawUnit(this.field, new PIXI.Point(0, UnitSettings.size/2));
-		this.drawField();
 		// Create Modal
 		this.modal = this.initUnit(new ModalBox());
 		this.drawUnit(this.modal, new PIXI.Point(this.app.screen.width/2, this.app.screen.height/2));
@@ -80,7 +79,7 @@ export default class MainScene extends Scene {
 		this.initUnit(this.scoreboard, new PIXI.Point(this.app.screen.width - 64, 64));
 		this.drawUnit(this.scoreboard);
 		// Create DropZone
-		this.initUnit(this.drop, new PIXI.Point(0, this.app.screen.height));
+		this.initUnit(this.drop, new PIXI.Point(UnitSettings.size/2, this.app.screen.height/2));
 		this.drawUnit(this.drop);
 		// Activate buttons
 		this.initButtonHandlers();
@@ -88,9 +87,8 @@ export default class MainScene extends Scene {
 
 	// Main update loop of scene
 	update () {
-		if( this.pool.length ) {
-			let com = this.pool.execute();
-		}
+		this.pool.execute();
+		this.animation.execute();
 	}
 
 	/**
@@ -137,9 +135,8 @@ export default class MainScene extends Scene {
 
 	drawHelpers () { this.registry.forEach(v => this.drawBounds(v)); }
 
-	resetGui () {}
-
 	drawDecks () {
+		this.drawField();
 		// Draw cards in F-cells
 		this.field.rows.forEach( row => {
 			row.cells.forEach( cell => {
@@ -147,6 +144,8 @@ export default class MainScene extends Scene {
 				cell.model.addChild(cell.card.model);
 			});
 		});
+		this.dealer.model.Deck.removeChildren();
+		this.dealer.model.Slot.removeChildren();
 		// Draw cards in D-deck
 		this.dealer.deck.forEach( card => {
 			this.initUnit(card);
@@ -171,26 +170,11 @@ export default class MainScene extends Scene {
 		this.app.renderer.resize(document.innerWidth, document.innerHeight);
 	}
 
-	dropCard (card, from) {
-		let {game,logic} = this;
-		let name = card.name;
-		card.visible = false;//$card.parent().find($card).remove();
-		// If remove from slot - check slot not empty and restore last card from slot
-		if( from.where === 'slot' ) {
-			let slotCard = this.dealer.slot.pop();
-			if( slotCard !== undefined ) {
-				this.showCardInSlot(slotCard);
-				this.dealer.slot.add(slotCard);
-			}
-		}
-	}
-
 	updateUndoButton () { this.buttons.get('Undo').model.alpha = this.pool.hasUndo() ? 1 : 0.5; }
 	hideModal () { this.modal.model.visible = false; }
 	showModal (text = undefined) { if( text ) this.modal.model.text = text; this.modal.model.visible = true; }
 
 	startRound (savedDeck = undefined) {
-		this.resetGui();
 		this.logic.initDecks(savedDeck);
 		this.drawDecks();
 		this.initHandlers();
@@ -199,39 +183,26 @@ export default class MainScene extends Scene {
 	initButtonHandlers () {
 		let {game,logic} = this;
 		this.buttons.get('Fullscreen').model.off('click').on('click', () => {
-			// console.log('click!!!');
-			if( Functions.isInFullScreen() ) {
+			if( Functions.isInFullScreen() ) 
 				Functions.fullScreenCancel();
-			}
-			else {
+			else 
 				Functions.fullScreen(document.querySelector('body'));
-			}
-
 		});
-		this.buttons.get('Undo').model.off('click').on('click', () => {
-				this.pool.undo();
-				return true;
-		});
+		this.buttons.get('Undo').model.off('click').on('click', () => this.pool.undo() );
 		this.buttons.get('Help').model.off('click').on('click', () => {
 			if( !this.modal.model.visible ) 
 				this.showModal(game.i18n.t('Rules'));
 			else
 				this.hideModal();
-			return true;
 		});
 		// Start new game and restart current game buttons
-		this.buttons.get('StartGame').model.off('click').on('click', () => {
-			this.startRound();
-			return true;
-		});
+		this.buttons.get('StartGame').model.off('click').on('click', () => this.startRound() );
 		// Restart current round
 		this.buttons.get('RestartGame').model.off('click').on('click', () => {
 			let savedDeck = undefined;
 			let autosave = game.loadRound();
-			if( autosave ) 
-				savedDeck = autosave.deck.slice(0);
+			if( autosave ) savedDeck = autosave.deck.slice(0);
 			this.startRound(savedDeck);
-			return true;
 		});
 	}
 
@@ -256,7 +227,7 @@ export default class MainScene extends Scene {
 				// console.log(`Card is opened, let's find pair and drop it`);
 				if( card.score === 13 ) {
 					// console.log(`This card is a king`);
-					logic.pool.add(logic.action('DropCards', card));
+					logic.pool.add(logic.command('DropCards', card));
 					// logic.dropCard(card);
 					return true;
 				}
@@ -264,7 +235,7 @@ export default class MainScene extends Scene {
 					let fitCard = logic.fitCard(card);
 					if( fitCard ) {
 						// console.log(`Found fit card`, fitCard);
-						logic.pool.add(logic.action('DropCards', fitCard, card));
+						logic.pool.add(logic.command('DropCards', fitCard, card));
 					}
 					else {
 						// console.log(`No fit card for ${card.name}`);
@@ -276,7 +247,7 @@ export default class MainScene extends Scene {
 
 		this.dealer.model.Deck.off('click').on('click', () => {
 			// console.log(`GetCardFromDealerDeck clicked!`);
-			logic.pool.add(logic.action('GetCardFromDealerDeck'));
+			logic.pool.add(logic.command('GetCardFromDealerDeck'));
 			return true;
 		});
 

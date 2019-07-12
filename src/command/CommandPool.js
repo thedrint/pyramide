@@ -13,9 +13,9 @@ export default class CommandPool extends SimpleCommandPool {
 	 * @return {Command}     executed command
 	 */
 	execute () {
+		if( !this.length ) return false;
 		let com = super.execute();
-		if( (com.isEnded || com.isFailed) && typeof com.undo == 'function' ) 
-			this.trash.add(new com.undo(com.rec, com.name, undefined, ...com.params));
+		if( (com.isEnded || com.isFailed) && com.undo instanceof Command ) this.trash.add(com.undo);
 		return com;
 	}
 

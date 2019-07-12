@@ -12,6 +12,7 @@ export default class SimpleCommandPool extends ArrayManager {
 	 * @return {Command}     executed command
 	 */
 	execute () {
+		if( !this.length ) return false;
 		let com = this.getFirst().execute();
 		if( com.isEnded || com.isFailed ) this.shift();
 		return com;

@@ -9,15 +9,18 @@ export default class Command {
 			FAIL    : 'FAIL',
 		};
 	}
-	constructor (receiver, name, undo = undefined, ...params) {
+	constructor (receiver, name, ...params) {
 		this.rec    = receiver;// Who executes command, receiver, recipient
 		this.name   = name;// Command name
 		this.params = params;// array of params
 		this.result = undefined;// result of command
 		this.state  = undefined;// current state of command
-		this.undo   = undo;// Command for undo this command
+		this._undo  = undefined;// Command for undo this command
 		this.started();
 	}
+
+	get undo ()        { return this._undo }
+	set undo (command) { this._undo = command }
 
 	/**
 	 * Flow of executing command
@@ -26,12 +29,11 @@ export default class Command {
 	execute () {
 		this.executed();
 		// Make some pre-actions
-		if( !this.pre() ) {
-			this.failed();
-			return this;
-		}
-		// Run some code that return result
+		if( !this.pre() ) return this.failed();
+		// Run some code, store return result
 		this.result = this.run();
+		// Make some post-actions after run had finished (ended or failed)
+		if( this.isEnded || this.isFailed ) this.post();
 		return this;
 	}
 
@@ -41,7 +43,7 @@ export default class Command {
 	 * @return {Any} Any result of command
 	 */
 	run () {
-		this.ended();// or failed() or still executed() or pended() or something else
+		this.ended();// or failed() or still executed() or something else
 		return true;
 	}
 
@@ -49,13 +51,19 @@ export default class Command {
 	 * Pre-run hook
 	 * @return {bool} If returns false - main execute will be aborted
 	 */
-	pre () { return true; }
+	pre  () { return true; }
+	/**
+	 * Post-run hook
+	 * Can be used for do some actions after run() ended or failed
+	 * @return nothing
+	 */
+	post () {}
 
 	// Aliases for set different states
-	started  () { this.state = Command.STATE.CREATE; }
-	executed () { this.state = Command.STATE.EXECUTE; }
-	ended    () { this.state = Command.STATE.FINISH; }
-	failed   () { this.state = Command.STATE.FAIL; }
+	started  () { this.state = Command.STATE.CREATE;  return this; }
+	executed () { this.state = Command.STATE.EXECUTE; return this; }
+	ended    () { this.state = Command.STATE.FINISH;  return this; }
+	failed   () { this.state = Command.STATE.FAIL;    return this; }
 	// Aliases for get different states
 	get isStarted  () { return this.state == Command.STATE.CREATE; }
 	get isExecuted () { return this.state == Command.STATE.EXECUTE; }
