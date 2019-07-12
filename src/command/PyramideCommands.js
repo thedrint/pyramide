@@ -11,8 +11,7 @@ export class doGetCardFromDealerDeck extends Command {
 		if( dealer.deck.length ) {
 			let newCard = dealer.deck.pop();
 			dealer.slot.add(newCard);
-			dealer.model.Slot.addChild(newCard.model);
-			newCard.model.showFace();
+			gui.animations.add(gui.animation('AnimationToSlot', newCard.model, 200))
 			this.ended();
 			return true;
 		}
@@ -43,8 +42,7 @@ export class undoGetCardFromDealerDeck extends Command {
 		if( dealer.slot.length ) {
 			let lastSlotCard = dealer.slot.pop();
 			dealer.deck.add(lastSlotCard);
-			dealer.model.Deck.addChild(lastSlotCard.model);
-			lastSlotCard.model.showShirt();
+			gui.animations.add(gui.animation('AnimationToDeck', lastSlotCard.model, 200))
 			this.ended();
 			return true;
 		}
@@ -82,7 +80,7 @@ export class doDropCards extends Command {
 			// Add card to drop
 			drop.cards.add(card);
 			gui.scoreboard.scores += card.score;
-			gui.animations.add(gui.animation('AnimationDrop', card.model, drop.model))
+			gui.animations.add(gui.animation('AnimationDrop', card.model, 300))
 		}
 
 		// Check game win
@@ -117,7 +115,7 @@ export class undoDropCards extends Command {
 
 		for( let card of cards ) {
 			gui.scoreboard.scores -= card.score;
-			gui.animations.add(gui.animation('AnimationUnDrop', card.model));
+			gui.animations.add(gui.animation('AnimationUnDrop', card.model, 300));
 		}
 
 		this.ended();

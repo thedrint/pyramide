@@ -37,6 +37,33 @@ export class AnimationMove extends Command {
 	}
 }
 
+export class AnimationToSlot extends AnimationMove {
+	constructor (scene, name, card, duration = 1000) {
+		let target = scene.dealer.model.Slot;
+		super(scene, name, card, target, duration);
+		this.card = card;
+	}
+	post () {
+		this.target.addChild(this.card);
+		this.card.showFace();
+		this.card.x = 0;
+		this.card.y = 0;
+	}
+}
+export class AnimationToDeck extends AnimationMove {
+	constructor (scene, name, card, duration = 1000) {
+		let target = scene.dealer.model.Deck;
+		super(scene, name, card, target, duration);
+		this.card = card;
+	}
+	post () {
+		this.target.addChild(this.card);
+		this.card.showShirt();
+		this.card.x = 0;
+		this.card.y = 0;
+	}
+}
+
 export class AnimationDrop extends AnimationMove {
 	constructor (scene, name, card, duration = 1000) {
 		let drop = scene.drop.model;
