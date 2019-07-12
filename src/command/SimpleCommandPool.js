@@ -14,7 +14,14 @@ export default class SimpleCommandPool extends ArrayManager {
 	execute () {
 		if( !this.length ) return false;
 		let com = this.getFirst().execute();
-		if( com.isEnded || com.isFailed ) this.shift();
+		if( com.isEnded ) this.shift();
 		return com;
+	}
+
+	executeAll () {
+		this.forEach( (com,i) => {
+			com.execute();
+			if( com.isEnded ) this.delete(i);
+		})
 	}
 }

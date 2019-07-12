@@ -27,13 +27,13 @@ export default class Command {
 	 * @return {Command} This command object with result of run in this.result field
 	 */
 	execute () {
-		this.executed();
+		if( this.isStarted ) this.executed();
 		// Make some pre-actions
 		if( !this.pre() ) return this.failed();
 		// Run some code, store return result
 		this.result = this.run();
 		// Make some post-actions after run had finished (ended or failed)
-		if( this.isEnded || this.isFailed ) this.post();
+		if( this.isEnded ) this.post();
 		return this;
 	}
 
@@ -43,7 +43,7 @@ export default class Command {
 	 * @return {Any} Any result of command
 	 */
 	run () {
-		this.ended();// or failed() or still executed() or something else
+		this.finished();// or failed() or still executed() or something else
 		return true;
 	}
 
@@ -62,11 +62,13 @@ export default class Command {
 	// Aliases for set different states
 	started  () { this.state = Command.STATE.CREATE;  return this; }
 	executed () { this.state = Command.STATE.EXECUTE; return this; }
-	ended    () { this.state = Command.STATE.FINISH;  return this; }
+	finished () { this.state = Command.STATE.FINISH;  return this; }
 	failed   () { this.state = Command.STATE.FAIL;    return this; }
+	ended    () { this.state = Command.STATE.FINISH;  return this; }// Alias
 	// Aliases for get different states
-	get isStarted  () { return this.state == Command.STATE.CREATE; }
+	get isStarted  () { return this.state == Command.STATE.CREATE;  }
 	get isExecuted () { return this.state == Command.STATE.EXECUTE; }
-	get isEnded    () { return this.state == Command.STATE.FINISH; }
-	get isFailed   () { return this.state == Command.STATE.FAIL; }
+	get isFinished () { return this.state == Command.STATE.FINISH;  }
+	get isFailed   () { return this.state == Command.STATE.FAIL;    }
+	get isEnded    () { return (this.isFinished || this.isFailed);  }
 }

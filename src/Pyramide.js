@@ -64,29 +64,6 @@ export default class Pyramide {
 	}
 	hasUndo () { return this.pool.hasUndo(); }
 
-	dropCard(card) {
-		// Remove card from field
-		if( card.from == 'field' ) {
-			this.field.getCell(card.row, card.index).removeCard();
-		}
-		// Or remove card from slot
-		else
-			this.dealer.slot.pop();
-		// Add card to drop
-		this.drop.cards.add(card);
-		this.scoreboard.scores += card.score;
-	}
-
-	undropCard(card) {
-		if( card.from == 'field' ) {
-			this.field.getCell(card.row, card.index).card = card;
-		}
-		else {
-			this.dealer.slot.add(card);
-		}
-		this.scoreboard.scores -= card.score;
-	}
-
 	isFieldDeckEmpty () {
 		let emptyCardCnt = 0;
 		this.field.rows.forEach( row => {
@@ -108,20 +85,15 @@ export default class Pyramide {
 	}
 
 	isCardOpened (card) {
-		// console.log(`isCardOpened`, card.name, card.where, card.row, card.index);
-		// Slot card always opened if on top of stack
-		if( card.where == 'slot' ) {
-			let cardIndex = this.dealer.slot.findIndex( slotCard => {return slotCard.name == card.name});
-			return ( cardIndex == this.dealer.slot.length-1 );
-		}
+		// Slot card is opened if on top of stack
+		if( card.where == 'slot' ) return ( card.name == this.dealer.slot[this.dealer.slot.length-1].name );
 		// Check for next row neighbours (with current index and index+1)
 		if( card.where == 'field' ) {
-			if( card.row == this.field.rows.length-1 ) return true;// Card from last row always opened
-			let nextRow = this.field.getRow(card.row+1);
-			let leftNeighbourCard  = nextRow.getCell(card.index).card;
-			let rightNeighbourCard = nextRow.getCell(card.index+1).card;
+			let nextRow = card.row+1;
+			if( nextRow > 6 ) return true;// Card from last row always opened
+			let leftNeighbourCard  = this.field.getRow(nextRow).getCell(card.index).card;
+			let rightNeighbourCard = this.field.getRow(nextRow).getCell(card.index+1).card;
 			let hasNextRowNeighbours = ( leftNeighbourCard || rightNeighbourCard );
-			// console.log('Card ' + (hasNextRowNeighbours?'NOT':'is') + ' opened');
 			return !hasNextRowNeighbours;
 		}
 		return false;

@@ -7,6 +7,7 @@ import MapManager from './../base/MapManager';
 import Utils from './../Utils';
 
 import Pyramide from './../Pyramide';
+import * as AnimationCommands from './../command/AnimationCommands';
 
 import Colors from './../Colors';
 import Scene from './../Scene';
@@ -79,7 +80,7 @@ export default class MainScene extends Scene {
 		this.initUnit(this.scoreboard, new PIXI.Point(this.app.screen.width - 64, 64));
 		this.drawUnit(this.scoreboard);
 		// Create DropZone
-		this.initUnit(this.drop, new PIXI.Point(UnitSettings.size/2, this.app.screen.height/2));
+		this.initUnit(this.drop, new PIXI.Point(this.app.screen.width - UnitSettings.size*2 - this.cardSize.width, UnitSettings.size/2));
 		this.drawUnit(this.drop);
 		// Activate buttons
 		this.initButtonHandlers();
@@ -88,7 +89,7 @@ export default class MainScene extends Scene {
 	// Main update loop of scene
 	update () {
 		this.pool.execute();
-		this.animation.execute();
+		this.animations.executeAll();
 	}
 
 	/**
@@ -110,8 +111,10 @@ export default class MainScene extends Scene {
 		this.drop       = this.logic.drop;
 
 		this.buttons    = new MapManager();
-		this.animation  = new CommandPool();// Special pool for animations
+		this.animations  = new CommandPool();// Special pool for animations
 	}
+
+	animation (name, ...params) { return new AnimationCommands[`${name}`](this, name, ...params); }
 
 	initUnit (unitObject, spawn = undefined) {
 		if( unitObject.initModel ) {

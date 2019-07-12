@@ -15,6 +15,7 @@ export default class CardModel extends Container {
 	 */
 	constructor (logic, scene) {
 		super(logic.settings);
+		this.name = logic.name;
 		this.logic = logic;
 		this.scene = scene;
 		this.interactive = true;

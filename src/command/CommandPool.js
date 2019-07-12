@@ -15,14 +15,14 @@ export default class CommandPool extends SimpleCommandPool {
 	execute () {
 		if( !this.length ) return false;
 		let com = super.execute();
-		if( (com.isEnded || com.isFailed) && com.undo instanceof Command ) this.trash.add(com.undo);
+		if( com.isEnded && com.undo instanceof Command ) this.trash.add(com.undo);
 		return com;
 	}
 
 	undo () {
 		if( !this.hasUndo() ) return false;
 		let com = this.trash.getLast().execute();
-		if( com.isEnded || com.isFailed ) this.trash.pop();
+		if( com.isEnded ) this.trash.pop();
 		return com;
 	}
 

@@ -65,6 +65,15 @@ export default class Utils {
 		return Math.sqrt(vx * vx + vy * vy);
 	}
 
+	static toGlobal (ctx, pos = undefined) {
+		let g, point;
+		let isSceneChild = ( ctx.parent == ctx.scene );
+		if( pos ) point = pos.clone();
+		else point = isSceneChild ? new PIXI.Point(ctx.position.x, ctx.position.y) : new PIXI.Point(0,0);
+		g = isSceneChild ? point : ctx.toGlobal(point);
+		// console.log(ctx.name, isSceneChild, point, g);
+		return g;
+	}
 	static getLocal (o) { return new PIXI.Point(o.x, o.y); }
 	static getLocalCenter (o) {
 		let localCenter = new PIXI.Point();
