@@ -24,4 +24,5 @@ export default class SimpleCommandPool extends ArrayManager {
 			if( com.isEnded ) this.delete(i);
 		})
 	}
+	pack () { return this.reduce( (a,c) => {return [...a, {name:c.name,params:c.params}]}, []); }
 }

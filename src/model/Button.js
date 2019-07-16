@@ -10,8 +10,7 @@ export default class ButtonModel extends PIXI.Sprite {
 	constructor (logic, scene) {
 		let params = logic.settings.model;
 		let models = [];
-
-		let modelWidth = params.size * UnitSettings.size;
+		let modelWidth = params.size || UnitSettings.size;
 		let modelHeight = modelWidth;
 
 		let texture = params.textures.main;

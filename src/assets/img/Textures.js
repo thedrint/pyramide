@@ -10,6 +10,8 @@ const buttonTexturePack = [
 	['RestartGame'  , './restart-game.svg'       ],
 	['StartGame'    , './start-game.svg'         ],
 	['Undo'         , './undo.svg'               ],
+	['SaveGame'     , './save.svg'               ],
+	['LoadGame'     , './load.svg'               ],
 	['Table'        , './tables/green-table.jpg' ],
 	['Shirt'        , './decks/atlas/Atlas_deck_card_back_blue_and_brown.svg'  ],
 ];
@@ -23,7 +25,14 @@ for( let rank in Card.rankmap ) {
 	}
 }
 
-Textures = [].concat(buttonTexturePack, atlasTexturePack);
+const fireworksTexturePack = [];
+for( let i = 1; i < 10; i++ ) {
+	let url = `./fireworks/rp-${i}.png`;
+	let name = `rp${i}`;
+	fireworksTexturePack.push([name,url]);
+}
+
+Textures = [].concat(buttonTexturePack, atlasTexturePack, fireworksTexturePack);
 // let promises = [];
 // [].concat(buttonTexturePack, atlasTexturePack).forEach(v=>{
 // 	let [name,url] = v;

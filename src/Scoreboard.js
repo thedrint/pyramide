@@ -19,12 +19,12 @@ export default class Scoreboard extends IEventEmitter {
 
 	get scores () { return this._scores; }
 	set scores (newScores) {
-		this._scores = newScores;
+		this._scores = parseInt(newScores);
 		this.updateScores();
 	}
 
 	updateScores (newScores = undefined) { 
-		if( newScores ) this._scores = newScores;
+		if( newScores ) this._scores = parseInt(newScores);
 		this.model.updateScores(this._scores.toString().padStart(3, '0')); 
 	}
 }

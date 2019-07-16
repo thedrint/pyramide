@@ -26,10 +26,10 @@ export default class CardModel extends Container {
 	init () {
 		let models = [];
 
-		let face = new FaceModel(this.logic.name);
+		let face = new FaceModel(this.logic.name, this.scene);
 		models.push(face);
 
-		let shirt = new ShirtModel();
+		let shirt = new ShirtModel(this.scene);
 		shirt.visible = false;
 		models.push(shirt);
 

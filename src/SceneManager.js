@@ -65,7 +65,6 @@ export default class SceneManager extends PIXI.Container {
 	showScene (name) {
 		let scene = this.get(name);
 		scene.visible = true;
-		this.bootScene(name);
 		return scene;
 	}
 	hideScene (name) {
@@ -82,42 +81,40 @@ export default class SceneManager extends PIXI.Container {
 		});
 
 		this.current = name;
-		return this.showScene(name);
+		this.showScene(name);
+		this.bootScene(name);
+		return this.getCurrentScene();
 	}
 
 	bootScene (name = undefined) {
-		if( !name ) {
-			name = this.current;
-		}
+		if( !name ) name = this.current;
 		let scene = this.get(name);
-		if( !scene )
-			return false;
+		if( !scene ) return false;
 
-		if( scene.init ) {
-			scene.init.call(scene);
-		}
+		if( scene.init ) scene.init.call(scene);
 
 		let loader = PIXI.Loader.shared;
-		let fonts = this.app.fonts;
-
 		if( loader && scene.preload ) {
 			scene.preload.call(scene);
 
-			// if nothing loaded or all loaded - go to creating scene
-			if( !loader.loading ) {
-				console.log('Nothing to load, lets create scene');
-				scene.create.call(scene);
+			if( loader.loading ) {
+				// console.log(`[${name}]: Wait for loading...`)
+				loader.onComplete.once(() => {
+					// console.log(`[${name}]: All resources are loaded, lets create scene now`);
+					scene.create.call(scene);
+				});
+				return this;
 			}
 			else {
-				console.log('Wait for loading...')
-				loader.onComplete.add(() => {
-					console.log('All resources are loaded, lets create scene now');
-					scene.create.call(scene);
-				});				
+				// console.log(`[${name}]: Nothing to load, lets create scene`);
+				scene.create.call(scene);
+				return this;
 			}
 		}
 		else {
+			// console.log(`[${name}]: No preload() moethod, immediatelly create scene`);
 			scene.create.call(scene);
+			return this;
 		}
 	}
 

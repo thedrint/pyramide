@@ -28,4 +28,16 @@ export default class CardManager extends MapManager {
 		return super.clear();
 	}
 
+	pack () {
+		return [...this.values()].reduce( (a,card) => {
+			return [...a, {
+				name: card.name,
+				row: card.row,
+				index: card.index,
+				from: card.from,
+				where: card.where,
+			}];
+		}, []);
+	}
+
 }

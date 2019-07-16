@@ -21,8 +21,8 @@ export default class ScoreboardModel extends Container {
 	init () {
 		let params = this.settings.model;
 
-		let modelWidth = params.width * UnitSettings.size;
-		let modelHeight = params.height * UnitSettings.size;
+		let modelWidth = params.width || UnitSettings.size;
+		let modelHeight = params.height || UnitSettings.size;
 
 		let models = [];
 

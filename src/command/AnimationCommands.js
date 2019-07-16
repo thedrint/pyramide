@@ -2,6 +2,7 @@
 import * as TWEEN from 'es6-tween';
 import Command from './Command';
 import Utils from './../Utils';
+import WinnerModel from './../model/Winner';
 
 export class AnimationMove extends Command {
 	constructor (scene, name, obj, target, duration = 1000) {
@@ -91,3 +92,29 @@ export class AnimationUnDrop extends AnimationMove {
 		this.card.y = 0;
 	}
 }
+
+export class AnimationWinner extends Command {
+	constructor (scene, name) {
+		super(scene, name);
+		this.winner = new WinnerModel(scene);
+		scene.addChild(this.winner);
+		this.winner.x = 0;
+		this.winner.y = 0;
+		this.winner.off('click').on('click', () => {
+			this.ended();
+			this.winner.destroy();
+			scene.hideModal();
+		})
+		this.firstLaunch = false;
+	}
+	pre () { return !this.isEnded; }
+	run () {
+		if( !this.firstLaunch ) {
+			this.rec.showModal(this.rec.app.game.i18n.t('You win a game!', {scores: this.rec.scoreboard.scores}));
+			this.winner.launchParticle();
+			this.firstLaunch = true;
+		}
+	  for (var i = 0, l = this.winner.particles.length; i < l; i++) this.winner.particles[i].update();
+	}
+}
+

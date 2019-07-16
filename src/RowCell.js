@@ -29,6 +29,8 @@ export default class RowCell extends IEventEmitter {
 		}
 	}
 
+	clear () { this._card = undefined; }
+
 	removeCard () {
 		let card = this.card;
 		// card.where = undefined;

@@ -38,58 +38,21 @@ export default class MainScene extends Scene {
 
 	init () {
 		this.initGameObjects();
+		this.calculateCardSize();
+	}
+
+	calculateCardSize () {
 		this.cardWidth = this.app.unitWidth;
-		this.cardSize = new ShirtModel().texture.orig;
-	}
-
-	preload () {}
-
-	create () {
-		this.resizeWindowHandlerHack = this.resizeWindowHandler.bind(this);
-
-		// Create floor
-		let table = new PIXI.TilingSprite(this.app.textures.Table, this.app.screen.width, this.app.screen.height);
-		this.addChild(table);
-		// CoordiNet
-		// this.drawCoords(50);
-		// Create Dealer
-		this.initUnit(this.dealer, new PIXI.Point(32, 32));
-		this.drawUnit(this.dealer);
-		// Create Buttons
-		let buttons = [
-			{model:{name:'Undo',textures:{main:this.app.textures.Undo}}},
-			{model:{name:'RestartGame',textures:{main:this.app.textures.RestartGame}}},
-			{model:{name:'StartGame',textures:{main:this.app.textures.StartGame}}},
-			{model:{name:'Fullscreen',textures:{main:this.app.textures.Fullscreen}}},
-			{model:{name:'Help',textures:{main:this.app.textures.Help}}},
-		];
-		let bY = 128;
-		buttons.forEach(b=>{
-			let button = this.initUnit(new Button(b), new PIXI.Point(this.app.screen.width - 64, bY));
-			this.drawUnit(button);
-			this.buttons.add(button);
-			bY += 64;
-		});
-		// Create Field
-		this.initUnit(this.field);
-		this.drawUnit(this.field, new PIXI.Point(0, UnitSettings.size/2));
-		// Create Modal
-		this.modal = this.initUnit(new ModalBox());
-		this.drawUnit(this.modal, new PIXI.Point(this.app.screen.width/2, this.app.screen.height/2));
-		// Create Scoreboard
-		this.initUnit(this.scoreboard, new PIXI.Point(this.app.screen.width - 64, 64));
-		this.drawUnit(this.scoreboard);
-		// Create DropZone
-		this.initUnit(this.drop, new PIXI.Point(this.app.screen.width - UnitSettings.size*2 - this.cardSize.width, UnitSettings.size/2));
-		this.drawUnit(this.drop);
-		// Activate buttons
-		this.initButtonHandlers();
-	}
-
-	// Main update loop of scene
-	update () {
-		this.pool.execute();
-		this.animations.executeAll();
+		this.cardHeight = this.app.unitHeight;
+		this.originalCard = PIXI.Loader.shared.resources['Shirt'].texture.orig;
+		let scaleW = this.cardWidth/this.originalCard.width;
+		let scaleH = this.cardHeight/this.originalCard.height;
+		this.cardScale = Math.min(scaleW, scaleH);
+		this.cardSize = {
+			width  : parseInt(this.originalCard.width  * this.cardScale), 
+			height : parseInt(this.originalCard.height * this.cardScale),
+		};
+		this.buttonSize = this.cardSize.width/2;
 	}
 
 	/**
@@ -114,6 +77,23 @@ export default class MainScene extends Scene {
 		this.animations  = new CommandPool();// Special pool for animations
 	}
 
+	preload () {}
+
+	create () {
+		// this.redrawCoords(50);
+		this.redrawGameObjects();
+		this.initButtonHandlers();
+		this.emit('created');
+	}
+
+	// Main update loop of scene
+	update () {
+		let com = this.pool.execute();
+		if( com.isEnded )
+			this.logic.saveTable();
+		this.animations.executeAll();
+	}
+
 	animation (name, ...params) { return new AnimationCommands[`${name}`](this, name, ...params); }
 
 	initUnit (unitObject, spawn = undefined) {
@@ -136,28 +116,64 @@ export default class MainScene extends Scene {
 		return card;
 	}
 
-	drawHelpers () { this.registry.forEach(v => this.drawBounds(v)); }
+	redrawGameObjects () {
+		this.redrawTable();
+		this.redrawDealer();
+		this.redrawButtons();
+		this.redrawField();
+		this.redrawModal();
+		this.redrawScoreboard();
+		this.redrawDropzone();
+	}
 
-	drawDecks () {
-		this.drawField();
-		// Draw cards in F-cells
-		this.field.rows.forEach( row => {
-			row.cells.forEach( cell => {
-				this.initUnit(cell.card);
-				cell.model.addChild(cell.card.model);
-			});
+	redrawTable () {
+		if( this.table ) this.table.destroy();
+		this.table = new PIXI.TilingSprite(this.app.textures.Table, this.app.screen.width, this.app.screen.height);
+		this.addChild(this.table);
+	}
+
+	redrawButtons () {
+		this.buttons.forEach( b => b.model.destroy() );
+		this.buttons.clear();
+		let buttons = [
+			{model:{name:'Undo',        size:this.buttonSize, textures:{main:this.app.textures.Undo}}},
+			{model:{name:'RestartGame', size:this.buttonSize, textures:{main:this.app.textures.RestartGame}}},
+			{model:{name:'StartGame',   size:this.buttonSize, textures:{main:this.app.textures.StartGame}}},
+			{model:{name:'SaveGame',    size:this.buttonSize, textures:{main:this.app.textures.SaveGame}}},
+			{model:{name:'LoadGame',    size:this.buttonSize, textures:{main:this.app.textures.LoadGame}}},
+		];
+		let leftColButtons = [
+			{model:{name:'Help',        size:this.buttonSize, textures:{main:this.app.textures.Help}}},
+			{model:{name:'Fullscreen',  size:this.buttonSize, textures:{main:this.app.textures.Fullscreen}}},
+		];
+		buttons.forEach((b,i)=>{
+			let bx, by;
+			bx = this.app.screen.width - this.buttonSize,
+			by = this.buttonSize*2.5 + this.buttonSize*1.5*i;
+			let button = this.initUnit(new Button(b), new PIXI.Point(bx, by));
+			this.drawUnit(button);
+			this.buttons.add(button);
 		});
-		this.dealer.model.Deck.removeChildren();
-		this.dealer.model.Slot.removeChildren();
-		// Draw cards in D-deck
-		this.dealer.deck.forEach( card => {
-			this.initUnit(card);
-			card.model.showShirt();
-			this.dealer.model.Deck.addChild(card.model);
+		leftColButtons.forEach((b,i)=>{
+			let bx, by;
+			bx = this.buttonSize,
+			by = this.cardSize.height + this.buttonSize*1.5 + this.buttonSize*1.5*i;
+			let button = this.initUnit(new Button(b), new PIXI.Point(bx, by));
+			this.drawUnit(button);
+			this.buttons.add(button);
 		});
 	}
 
-	drawField () {
+	redrawDealer() {
+		if( this.dealer.model ) this.dealer.model.destroy();
+		this.initUnit(this.dealer, new PIXI.Point(this.buttonSize/2, this.buttonSize/2));
+		this.drawUnit(this.dealer);
+	}
+
+	redrawField () {
+		if( this.field.model ) this.field.model.destroy();
+		this.initUnit(this.field);
+		this.drawUnit(this.field, new PIXI.Point(0, this.buttonSize/2));
 		this.field.model.removeChildren();
 		this.field.rows.forEach( row => {
 			row.initModel(this);
@@ -169,9 +185,61 @@ export default class MainScene extends Scene {
 		});
 	}
 
-	resizeWindowHandler () {
-		this.app.renderer.resize(document.innerWidth, document.innerHeight);
+	redrawModal () {
+		if( this.modal && this.modal.model ) this.modal.model.destroy();
+		this.modal = this.initUnit(new ModalBox());
+		this.drawUnit(this.modal, new PIXI.Point(this.app.screen.width/2, this.app.screen.height/2));		
 	}
+
+	redrawScoreboard () {
+		if( this.scoreboard.model ) this.scoreboard.model.destroy();
+		this.scoreboard.settings.model.width  = this.buttonSize;
+		this.scoreboard.settings.model.height = this.buttonSize;
+		this.initUnit(this.scoreboard, new PIXI.Point(this.app.screen.width - this.buttonSize, this.buttonSize));
+		this.drawUnit(this.scoreboard);
+	}
+
+	redrawDropzone () {
+		if( this.drop.model ) this.drop.model.destroy();
+		this.initUnit(this.drop, new PIXI.Point(this.app.screen.width - this.buttonSize*2 - this.cardSize.width, this.buttonSize/2));
+		this.drawUnit(this.drop);
+	}
+
+	drawHelpers () { this.registry.forEach(v => this.drawBounds(v)); }
+
+	redrawDecks () {
+		this.field.rows.forEach( row => {
+			row.cells.forEach( cell => {
+				if( cell.card ) {
+					this.initUnit(cell.card);
+					cell.model.addChild(cell.card.model);					
+				}
+			});
+		});
+
+		this.dealer.model.Deck.removeChildren();
+		// console.log(this.dealer.deck);
+		this.dealer.deck.forEach( card => {
+			this.initUnit(card);
+			card.model.showShirt();
+			this.dealer.model.Deck.addChild(card.model);
+		});
+		this.dealer.model.Slot.removeChildren();
+		// console.log(this.dealer.slot);
+		this.dealer.slot.forEach( card => {
+			this.initUnit(card);
+			card.model.showFace();
+			this.dealer.model.Slot.addChild(card.model);
+		});
+
+		this.drop.model.removeChildren();
+		this.drop.cards.forEach( card => {
+			this.initUnit(card);
+			card.model.showFace();
+			this.drop.model.addChild(card.model)
+		});
+	}
+
 
 	updateUndoButton () { this.buttons.get('Undo').model.alpha = this.pool.hasUndo() ? 1 : 0.5; }
 	hideModal () { this.modal.model.visible = false; }
@@ -179,7 +247,7 @@ export default class MainScene extends Scene {
 
 	startRound (savedDeck = undefined) {
 		this.logic.initDecks(savedDeck);
-		this.drawDecks();
+		this.redrawDecks();
 		this.initHandlers();
 	}
 
@@ -207,56 +275,55 @@ export default class MainScene extends Scene {
 			if( autosave ) savedDeck = autosave.deck.slice(0);
 			this.startRound(savedDeck);
 		});
+		this.buttons.get('SaveGame').model.off('click').on('click', () => {
+			logic.saveTable();
+		});
+		this.buttons.get('LoadGame').model.off('click').on('click', () => {
+			this.redrawGameObjects();
+			this.initButtonHandlers();
+			logic.loadTable();
+			this.redrawDecks();
+			this.initHandlers();
+		});
 	}
 
 	initHandlers() {
 		let {logic} = this;
-		// Resize hack
-		// window.removeEventListener('resize', this.resizeWindowHandlerHack)
-		// window.addEventListener('resize', this.resizeWindowHandlerHack);
 		
 		// Any card clicked
 		this.cards.forEach(card => {
 			card.model.off('click').on('click', () => {
-				if( card.isShirted )
-					return true;
-
-				// If card is not opened - can't click on it
-				if( !card.isOpened ) {
-					// console.log(`Card isn't opened`);
-					return true;
-				}
-
-				// console.log(`Card is opened, let's find pair and drop it`);
+				if( card.isShirted ) return true;
+				if( !card.isOpened ) return true;
 				if( card.score === 13 ) {
-					// console.log(`This card is a king`);
 					logic.pool.add(logic.command('DropCards', card));
-					// logic.dropCard(card);
 					return true;
 				}
 				else {
 					let fitCard = logic.fitCard(card);
-					if( fitCard ) {
-						// console.log(`Found fit card`, fitCard);
-						logic.pool.add(logic.command('DropCards', fitCard, card));
-					}
-					else {
-						// console.log(`No fit card for ${card.name}`);
-					}
+					if( fitCard ) logic.pool.add(logic.command('DropCards', fitCard, card));
+					return true;
 				}
-				return true;
 			});
 		})
 
 		this.dealer.model.Deck.off('click').on('click', () => {
-			// console.log(`GetCardFromDealerDeck clicked!`);
 			logic.pool.add(logic.command('GetCardFromDealerDeck'));
 			return true;
 		});
 
-		this.modal.model.off('click').on('click', () => {
-			this.hideModal();
-		});
+		this.modal.model.off('click').on('click', () => { this.hideModal(); });
+	}
+
+	saveState () {
+		console.log('Saving table state...')
+		this.logic.saveTable();
+	}
+	restoreState () {
+		console.log('Restoring table state...')
+		this.logic.loadTable();
+		this.redrawDecks();
+		this.initHandlers();
 	}
 
 }

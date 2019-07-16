@@ -84,7 +84,8 @@ export default class Scene extends Container {
 		return this;
 	}
 
-	drawCoords (step = 64) {
+	redrawCoords (step = 64) {
+		if( this.coordHelper ) this.coordHelper.destroy();
 		this.coordHelper = new PIXI.Graphics();
 		this.coordHelper.name = 'CoordHelper';
 		this.addChild(this.coordHelper);		

@@ -12,8 +12,8 @@ export default class RowCellModel extends PIXI.Graphics {
 	}
 
 	init () {
-		let testCard = this.scene.cardSize;
-		this.lineStyle(1, Colors.black, 0);
-		this.drawShape(new PIXI.RoundedRectangle(0, 0, testCard.width, testCard.height, testCard.width*0.1));
+		// let testCard = this.scene.cardSize;
+		// this.lineStyle(0, Colors.black, 1);
+		// this.drawShape(new PIXI.RoundedRectangle(0, 0, testCard.width, testCard.height, testCard.width*0.1));
 	}
 }

@@ -1,20 +1,10 @@
 
 import * as PIXI from 'pixi.js';
-import SvgLoader from './../utils/SvgLoader';
-// Local loading of font - have a bug in rendering, use Webfont instead
-// import './../../fonts/PressStart2P.css';
-//TODO: Haha, Webfont loads at first time with bug too
-import { WebFont as WebFontConfig } from './../Settings';
-
 import Utils from './../Utils';
 import Colors from './../Colors';
 
-import Card from './../Card';
-
 import Scene from './../Scene';
-// load sprites - we have predefined object list of imported textures
 import { Textures as ImageTextures } from './../assets/img/Textures';
-// reset styles for html (margins, paddings and other)
 import 'reset-css';
 
 export default class LoadScene extends Scene {
@@ -27,32 +17,21 @@ export default class LoadScene extends Scene {
 
 	preload () {
 		this.resourceLoadingProgress = 0;
-		console.log('SceneLoad preload()');
-		this.preloadWebfonts();
-	}
 
-	preloadWebfonts () {
-		let fonts = this.app.fonts;
-		// Loading fonts first - we need ttf to create progressbar
-		let fontsLoading = Object.assign(WebFontConfig, {
-			active: () => {
-				this.fontsLoaded = true;
-				// Then loading other resources
-				this.preloadResources();
-			}
-		});
-		fonts.load(fontsLoading);
-	}
-
-	preloadResources () {
 		let loader = PIXI.Loader.shared;
+		this.svgLoadPromises = [];
 		// Add svgBaseTexture if svg card or shirt loaded
 		loader.use((resource, next) => {
 			if( resource.data && resource.extension === 'svg' ) {
 				let options = {};
-				if( /^Card_*/.test(resource.name) || resource.name == 'Shirt' )// Use scale for cards and shirt
-					options.scale = this.app.unitWidth/resource.texture.orig.width;
-				resource.svgBaseTexture = new PIXI.BaseTexture(new PIXI.resources.SVGResource(resource.url, options));
+				if( /^Card_*/.test(resource.name) || resource.name == 'Shirt' ) {// Use scale for cards and shirt
+					let scaleW = this.app.unitWidth/resource.texture.orig.width;
+					let scaleH = this.app.unitHeight/resource.texture.orig.height;
+					options.scale = Math.min(scaleW, scaleH);
+				}
+				resource.svgResource = new PIXI.resources.SVGResource(resource.url, options);
+				this.svgLoadPromises.push(resource.svgResource.load());
+				resource.svgBaseTexture = new PIXI.BaseTexture(resource.svgResource);
 			}
 			next();
 		});
@@ -60,38 +39,27 @@ export default class LoadScene extends Scene {
 		const textures = {};
 		// Add to queue textures we need
 		for( let [name, url] of ImageTextures ) loader.add(name, `./../assets/img/${url}`);
-
 		loader.load((loader, resources) => {
-			for( let name in resources ) textures[name] = resources[name].texture;
-			Object.assign(this.app.textures, textures);
+			Promise
+				.all(this.svgLoadPromises)
+				.then(vals=>{
+					for( let name in resources ) textures[name] = resources[name].texture;
+					Object.assign(this.app.textures, textures);
+					if( loader.progress >= 100 ) this.app.stage.switchTo("MainScene");				
+				})
+				.catch(e=>console.error(e));				
 		});
 
-		loader.onProgress.add((loader) => {
-			// When resources loading will become really slow - uncomment this and remove imitating in update()
-			this.resourceLoadingProgress = loader.progress;
-			if( this.resourceLoadingProgress >= 100 ) {
-				console.log(`Switching to MainScene`);
-				//TODO: make switch through animation/fade out/blur/etc
-				this.app.stage.switchTo("MainScene");
-			}
-		});
+		loader.onLoad.add( (loader, resource) => {this.resourceLoadingProgress = loader.progress} );
 	}
 
 	create () {
-		console.log('SceneLoad create()');
 		this.progressbar();
+		this.emit('created');
 	}
 
 	update () {
-		// Imitate long process of loading resources (in future it will become real)
-		// this.resourceLoadingProgress += 3;
 		this.progressbar(this.resourceLoadingProgress);
-
-		// if( this.resourceLoadingProgress >= 100 ) {
-		// 	console.log(`Switching to MainScene`);
-		// 	//TODO: make switch through animation/fade out/blur/etc
-		// 	this.app.stage.switchTo("MainScene");
-		// }
 	}
 
 	/**
@@ -161,5 +129,4 @@ export default class LoadScene extends Scene {
 
 		return;
 	}
-
 }

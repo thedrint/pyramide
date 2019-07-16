@@ -71,8 +71,10 @@ export class doDropCards extends Command {
 			gui.animations.add(gui.animation('AnimationDrop', card.model, 300))
 		}
 		// Check game win
-		//TODO: Win animation
-		if( logic.isFieldDeckEmpty() ) gui.showModal(game.i18n.t('You win a game!', {scores: scoreboard.scores}));
+		if( logic.isFieldDeckEmpty() ) {
+			// gui.showModal(game.i18n.t('You win a game!', {scores: scoreboard.scores}));
+			gui.animations.add(gui.animation('AnimationWinner'));
+		}
 		this.ended(); return true;
 	}
 }

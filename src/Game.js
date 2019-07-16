@@ -45,5 +45,11 @@ export default class Game {
 
 	loadRound () { return JSON.parse(this.storage.getItem('autosave')); }
 
+	saveTable (data) {
+		this.storage.setItem('table', JSON.stringify(data));
+		return true;
+	}
+	loadTable () { return JSON.parse(this.storage.getItem('table')); }
+
 	stopGame () { this.app.stop(); }
 }

@@ -15,4 +15,5 @@ export default class DropManager extends ArrayManager {
 		card.where = undefined;
 		return card;
 	}
+	pack () { return this.reduce( (a,c) => {return [...a, c.name]}, []); }
 }

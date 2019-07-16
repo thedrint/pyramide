@@ -23,6 +23,8 @@ export default class Row extends IEventEmitter {
 		}
 	}
 
+	clearCells () { this.cells.forEach( cell => cell.clear() ); }
+
 	getCell(index) {
 		return this.cells[index];
 	}

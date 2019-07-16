@@ -3,11 +3,14 @@ import {UNIT} from './Constants';
 import Colors from './Colors';
 
 export const Application = {
+	safeWidth: 800,
+	safeHeight: 600,
 	width: 800,
-	height: 650,
+	height: 600,
 	autoStart: false, 
-	autoResize: true,
+	autoDensity: true,
 	backgroundColor: Colors.breeze,
+	// resizeTo: document,
 };
 
 export const FPS = {
@@ -44,7 +47,7 @@ export const Defaults = {
 	Button: {
 		model : {
 			name        : 'Button',
-			size        : 1/2,
+			size        : 32,
 			textures    : {
 				main      : undefined,
 				pressed   : undefined,
@@ -57,8 +60,8 @@ export const Defaults = {
 		}, 
 		model : {
 			name   : `Scoreboard`,
-			width  : 1,
-			height  : 1,
+			width  : 64,
+			height  : 64,
 			fontColor : Colors.white,
 			backgroundColor : Colors.green,
 			texture : undefined,
