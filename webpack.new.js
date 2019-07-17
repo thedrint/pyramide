@@ -10,7 +10,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 
 const srcDir = './src';// Site dir on server (relative to this config)
-const dstDir = './new';// Site dir on server (relative to this config)
+const dstDir = './';// Site dir on server (relative to this config)
 
 module.exports = {
 	mode: "production",
