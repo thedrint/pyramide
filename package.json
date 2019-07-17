@@ -11,10 +11,11 @@
   ],
   "main": "src-jquery/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config webpack.dev.js",
-    "prod": "webpack --config webpack.prod.js",
-    "start": "webpack-dev-server --open --config webpack.dev.js"
+    "test"  : "echo \"Error: no test specified\" && exit 1",
+    "build" : "webpack --config webpack.dev.js",
+    "new"   : "webpack --config webpack.new.js",
+    "prod"  : "webpack --config webpack.prod.js",
+    "start" : "webpack-dev-server --open --config webpack.dev.js"
   },
   "author": "thedrint@yandex.ru",
   "license": "MIT",

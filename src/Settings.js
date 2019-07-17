@@ -21,7 +21,7 @@ export const FPS = {
 
 export const Game = {
 	title: `Pyramide Solitaire`,
-	version: `0.0.1-pixi`,
+	version: `0.5.0-pixi`,
 	maxRewind: 2,
 	tile: 32,
 	unit: {
