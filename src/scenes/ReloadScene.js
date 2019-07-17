@@ -15,7 +15,7 @@ export default class ReloadScene extends Scene {
 		let loader = PIXI.Loader.shared;
 		this.svgLoadPromises = [];		
 		const textures = {};
-		for( let [name, url] of ImageTextures ) {
+		for( let name in ImageTextures ) {
 			let resource = loader.resources[name];
 			if( resource.data && resource.extension === 'svg' ) {
 				let options = {};

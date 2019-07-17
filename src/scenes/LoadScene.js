@@ -37,7 +37,6 @@ export default class LoadScene extends Scene {
 		});
 		
 		const textures = {};
-		// Add to queue textures we need
 		for( let name in ImageTextures ) loader.add(name, ImageTextures[name]);
 		loader.load((loader, resources) => {
 			Promise

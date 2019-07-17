@@ -10,7 +10,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 
 const srcDir = './src';// Site dir on server (relative to this config)
-const dstDir = './';// Site dir on server (relative to this config)
+const dstDir = './new';// Site dir on server (relative to this config)
 
 module.exports = {
 	mode: "production",
@@ -40,12 +40,11 @@ module.exports = {
 				'index.css*', 
 				'favicon.png', 
 				'assets/*', 
-				'!assets/img/**', // exclude images
 				'locales/*', 
 			],
 		}),
 		new CopyWebpackPlugin([
-			{from: './assets/img', to: './assets/img', context: srcDir},
+			// {from: '**/*.+(png|jpg|gif|svg)', to: './assets/img', context: srcDir},
 			{from: './locales', to: './locales', context: srcDir},
 		]),
 		// new SpriteLoaderPlugin(),
@@ -74,7 +73,7 @@ module.exports = {
 			// },
 			{
 				test: /\.(png|jpe?g|gif|svg)$/,
-				include: path.resolve(__dirname, `${srcDir}/assets/img`),
+				// include: path.resolve(__dirname, `${srcDir}/assets/img`),
 				use: [
 					{
 						loader: 'url-loader',
