@@ -21,7 +21,7 @@ module.exports = {
 	{
 		path: path.resolve(__dirname, dstDir),
 		filename: '[name].js',
-		publicPath: './',
+		publicPath: '/new/',
 	},
 	optimization: {
 		minimizer: [
@@ -39,13 +39,14 @@ module.exports = {
 				'index.js*', 
 				'index.css*', 
 				'favicon.png', 
-				'assets/img/*', 
-				'assets/locales/*', 
+				'assets/*', 
+				'!assets/img/**', // exclude images
+				'locales/*', 
 			],
 		}),
 		new CopyWebpackPlugin([
 			{from: './assets/img', to: './assets/img', context: srcDir},
-			{from: './assets/locales', to: './assets/locales', context: srcDir},
+			{from: './locales', to: './locales', context: srcDir},
 		]),
 		// new SpriteLoaderPlugin(),
 		// new SVGSpritemapPlugin({
@@ -57,7 +58,6 @@ module.exports = {
 		new MiniCssExtractPlugin(),
 		new HtmlWebpackPlugin({
 			title: 'Pyramide Solitaire',
-			template: `${srcDir}/index.html`,
 			favicon: `${srcDir}/assets/img/favicon.png`,
 		}),
 	],
