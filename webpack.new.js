@@ -21,7 +21,7 @@ module.exports = {
 	{
 		path: path.resolve(__dirname, dstDir),
 		filename: '[name].js',
-		publicPath: './',
+		publicPath: '/pyramide/',
 	},
 	optimization: {
 		minimizer: [
