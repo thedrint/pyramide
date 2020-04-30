@@ -25,7 +25,7 @@
     "i18next": "^11.10.2",
     "i18next-browser-languagedetector": "^2.2.4",
     "i18next-xhr-backend": "^1.5.1",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "pixi.js": "^5.0.4",
     "popper.js": "^1.15.0",
     "reset-css": "^4.0.1",
